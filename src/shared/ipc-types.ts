@@ -314,3 +314,39 @@ export interface CreateEvidenceInput {
 }
 
 export type UpdateEvidenceInput = Partial<CreateEvidenceInput> & { id: string }
+
+// --- GSR writing environment (§9) ------------------------------------------
+
+export type GsrDocumentStatus = 'drafting' | 'in_review' | 'finalized'
+
+export interface GsrDocument {
+  id: string
+  clientId: string
+  title: string
+  status: GsrDocumentStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GsrSection {
+  id: string
+  gsrDocumentId: string
+  title: string
+  orderIndex: number
+  contentHtml: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GsrStatement {
+  id: string
+  gsrSectionId: string
+  text: string
+  orderIndex: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GsrStatementWithEvidence extends GsrStatement {
+  evidence: { linkId: string; evidence: EvidenceItem }[]
+}

@@ -27,7 +27,10 @@ import type {
   UpdateVerificationRecordInput,
   EvidenceItem,
   CreateEvidenceInput,
-  UpdateEvidenceInput
+  UpdateEvidenceInput,
+  GsrDocument,
+  GsrSection,
+  GsrStatementWithEvidence
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -128,6 +131,33 @@ const api = {
       ipcRenderer.invoke('evidence:attachFile', evidenceId),
     removeFile: (evidenceId: string): Promise<EvidenceItem> =>
       ipcRenderer.invoke('evidence:removeFile', evidenceId)
+  },
+  gsr: {
+    getOrCreateDocument: (clientId: string): Promise<GsrDocument> =>
+      ipcRenderer.invoke('gsr:getOrCreateDocument', clientId),
+    listSections: (gsrDocumentId: string): Promise<GsrSection[]> =>
+      ipcRenderer.invoke('gsr:listSections', gsrDocumentId),
+    createSection: (gsrDocumentId: string, title: string): Promise<GsrSection> =>
+      ipcRenderer.invoke('gsr:createSection', { gsrDocumentId, title }),
+    updateSection: (
+      args: { id: string } & Partial<Pick<GsrSection, 'title' | 'contentHtml' | 'orderIndex'>>
+    ): Promise<GsrSection> => ipcRenderer.invoke('gsr:updateSection', args),
+    deleteSection: (id: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('gsr:deleteSection', id),
+    reorderSections: (orderedIds: string[]): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('gsr:reorderSections', orderedIds),
+    listStatements: (sectionId: string): Promise<GsrStatementWithEvidence[]> =>
+      ipcRenderer.invoke('gsr:listStatements', sectionId),
+    createStatement: (sectionId: string, text: string): Promise<GsrStatementWithEvidence> =>
+      ipcRenderer.invoke('gsr:createStatement', { sectionId, text }),
+    updateStatement: (id: string, text: string): Promise<GsrStatementWithEvidence> =>
+      ipcRenderer.invoke('gsr:updateStatement', { id, text }),
+    deleteStatement: (id: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('gsr:deleteStatement', id),
+    linkEvidence: (statementId: string, evidenceItemId: string): Promise<{ id: string }> =>
+      ipcRenderer.invoke('gsr:linkEvidence', { statementId, evidenceItemId }),
+    unlinkEvidence: (linkId: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('gsr:unlinkEvidence', linkId)
   }
 }
 
