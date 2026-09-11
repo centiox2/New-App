@@ -3,6 +3,7 @@ import { Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
 import type { ClientStatus, ClientWithProgress, WorkflowStage } from '@shared/ipc-types'
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { STAGE_LABELS, STAGE_ORDER, formatDate } from '../lib/format'
+import { InformationStage } from './InformationStage'
 
 const STATUS_OPTIONS: ClientStatus[] = ['red', 'yellow', 'green']
 
@@ -146,7 +147,11 @@ export function ClientWorkspace(): React.JSX.Element {
       </aside>
 
       <main className="flex-1 overflow-y-auto p-8">
-        <StagePlaceholder stage={stage} />
+        {stage === 'information' ? (
+          <InformationStage clientId={clientId} />
+        ) : (
+          <StagePlaceholder stage={stage} />
+        )}
       </main>
     </div>
   )

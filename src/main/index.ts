@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { initDb } from './db/client'
 import { registerClientHandlers } from './ipc/clients'
 import { registerSettingsHandlers } from './ipc/settings'
+import { registerInformationHandlers } from './ipc/information'
 
 function createWindow(): void {
   // Create the browser window.
@@ -64,6 +65,7 @@ app.whenReady().then(() => {
   initDb()
   registerClientHandlers()
   registerSettingsHandlers()
+  registerInformationHandlers()
 
   createWindow()
 

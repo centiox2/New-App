@@ -7,8 +7,33 @@ import type {
   UpdateClientInput,
   AppLockState,
   SetupPasswordInput,
-  UnlockInput
+  UnlockInput,
+  PersonalProfile,
+  EducationEntry,
+  EnglishTestScore,
+  AustralianStudyEntry,
+  EmploymentEntry,
+  ImmigrationHistoryEntry,
+  Sponsor,
+  IncomeSource
 } from '../shared/ipc-types'
+
+/** Typed list/create/update/delete client for one information-section channel. */
+function makeCrudApi<T extends { id: string }>(
+  channel: string
+): {
+  list: (parentId: string) => Promise<T[]>
+  create: (parentId: string, data: Partial<T>) => Promise<T>
+  update: (id: string, data: Partial<T>) => Promise<T>
+  delete: (id: string) => Promise<{ ok: true }>
+} {
+  return {
+    list: (parentId) => ipcRenderer.invoke(`${channel}:list`, parentId),
+    create: (parentId, data) => ipcRenderer.invoke(`${channel}:create`, { parentId, data }),
+    update: (id, data) => ipcRenderer.invoke(`${channel}:update`, { id, data }),
+    delete: (id) => ipcRenderer.invoke(`${channel}:delete`, id)
+  }
+}
 
 const api = {
   clients: {
@@ -29,6 +54,21 @@ const api = {
       input: UnlockInput
     ): Promise<{ ok: boolean; reason?: 'not_configured' | 'wrong_password' }> =>
       ipcRenderer.invoke('settings:unlock', input)
+  },
+  information: {
+    personal: {
+      get: (clientId: string): Promise<PersonalProfile> =>
+        ipcRenderer.invoke('information:personal:get', clientId),
+      update: (clientId: string, data: Partial<PersonalProfile>): Promise<PersonalProfile> =>
+        ipcRenderer.invoke('information:personal:update', { clientId, data })
+    },
+    education: makeCrudApi<EducationEntry>('information:education'),
+    englishTest: makeCrudApi<EnglishTestScore>('information:englishTest'),
+    australianStudy: makeCrudApi<AustralianStudyEntry>('information:australianStudy'),
+    employment: makeCrudApi<EmploymentEntry>('information:employment'),
+    immigration: makeCrudApi<ImmigrationHistoryEntry>('information:immigration'),
+    sponsor: makeCrudApi<Sponsor>('information:sponsor'),
+    incomeSource: makeCrudApi<IncomeSource>('information:incomeSource')
   }
 }
 

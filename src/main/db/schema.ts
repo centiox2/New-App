@@ -87,7 +87,7 @@ export const personalProfiles = sqliteTable('personal_profiles', {
     .references(() => clients.id, { onDelete: 'cascade' }),
   contactInfo: text('contact_info'),
   residenceInfo: text('residence_info'),
-  nextOfKin: text('next_of_kin'), // JSON
+  nextOfKin: text('next_of_kin'),
   familyInfo: text('family_info'),
   customFields: text('custom_fields'), // JSON
   ...timestamps
