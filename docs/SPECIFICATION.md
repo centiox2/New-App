@@ -115,12 +115,11 @@ the attached files, and a document can support more than one information
 entry if relevant (e.g. one bank statement supporting both an Income Source
 and a Verification record).
 
-**Versioning — proposed, needs your confirmation**: I recommend every edit to
-an information entry keeps a lightweight history (previous value + timestamp,
-not a full diff UI) rather than silently overwriting, since GSR-relevant facts
-sometimes get corrected mid-case and it's useful to know what changed and
-when. This is a proposal — say if you'd rather have no history and just track
-"last edited."
+**Versioning (confirmed)**: every edit to an information entry keeps a
+lightweight field-level history (previous value + timestamp, not a full diff
+UI) rather than silently overwriting, since GSR-relevant facts sometimes get
+corrected mid-case and it's useful to know what changed and when. This
+history feeds the audit log in §18 as well.
 
 **Verified / unverified marking**: any individual field or entry can be
 flagged "requires verification." Until a linked Verification record reaches
@@ -401,7 +400,9 @@ them.
 7. **AI integration**: client-scoped Gemini calls, chat interface, propose/
    review edit flow
 8. **Checklist/compliance**: PDF checklist parsing, compliance scoring, gap
-   detection, AI-assisted fixes
+   detection, AI-assisted fixes — confirmed as Phase 8, matching your actual
+   practice of running this check when a case is nearly complete rather than
+   throughout the case
 9. **Finalization**: Word/PDF export, evidence pack assembly, review flow
 10. **Polish**: theming, empty/loading/error states, backup-folder docs,
     packaging/installer
@@ -421,9 +422,9 @@ them.
 
 ## Open items still needing your input before implementation starts
 
-- **§5 versioning depth** — confirm full field-history vs. "last edited only"
-- **§15/§16 schema/folder design** — will be proposed in detail as a
-  follow-up once the above is confirmed; not something to approve blind
-- Whether you want the **AI compliance/checklist feature** prioritized
-  earlier than Phase 8, given how central it sounds in how you described your
-  review process
+- **§15/§16 schema/folder design** — the detailed SQLite schema and on-disk
+  folder layout will be proposed as a dedicated follow-up before any code is
+  written; not something to approve blind alongside everything else here
+
+All other open items from the previous draft are now resolved (see §5 and
+Phase 8 above).
