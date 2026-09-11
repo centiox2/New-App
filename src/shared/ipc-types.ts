@@ -234,3 +234,53 @@ export interface ReplaceDocumentInput {
   id: string
   sourcePath: string
 }
+
+// --- Verification (§7) -----------------------------------------------------
+
+export type VerificationStatus = 'not_required' | 'pending' | 'verified' | 'could_not_verify'
+
+export interface VerificationRecord {
+  id: string
+  clientId: string
+  subjectEntityType: string
+  subjectEntityId: string
+  whatIsBeingVerified: string
+  reason: string | null
+  contactName: string | null
+  contactDetails: string | null
+  method: string | null
+  dateContacted: string | null
+  status: VerificationStatus
+  response: string | null
+  dateVerified: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateVerificationRecordInput {
+  clientId: string
+  subjectEntityType: string
+  subjectEntityId: string
+  whatIsBeingVerified: string
+  reason?: string | null
+  contactName?: string | null
+  contactDetails?: string | null
+  method?: string | null
+  dateContacted?: string | null
+  status?: VerificationStatus
+  response?: string | null
+  dateVerified?: string | null
+  notes?: string | null
+}
+
+export type UpdateVerificationRecordInput = Partial<CreateVerificationRecordInput> & { id: string }
+
+/** One information entry flagged "requires verification", with its current verification state (if any). */
+export interface VerifiableItem {
+  entityType: 'education_entries' | 'english_test_scores' | 'employment_entries' | 'income_sources'
+  entityId: string
+  label: string
+  subtitle: string | null
+  verificationRecord: VerificationRecord | null
+}

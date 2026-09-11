@@ -5,6 +5,7 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 import { STAGE_LABELS, STAGE_ORDER, formatDate } from '../lib/format'
 import { InformationStage } from './InformationStage'
 import { DocumentsStage } from './DocumentsStage'
+import { VerificationStage } from './VerificationStage'
 
 const STATUS_OPTIONS: ClientStatus[] = ['red', 'yellow', 'green']
 
@@ -152,6 +153,8 @@ export function ClientWorkspace(): React.JSX.Element {
           <InformationStage clientId={clientId} />
         ) : stage === 'documents' ? (
           <DocumentsStage clientId={clientId} />
+        ) : stage === 'verification' ? (
+          <VerificationStage clientId={clientId} />
         ) : (
           <StagePlaceholder stage={stage} />
         )}

@@ -20,7 +20,11 @@ import type {
   PickedFile,
   CreateDocumentInput,
   UpdateDocumentInput,
-  ReplaceDocumentInput
+  ReplaceDocumentInput,
+  VerificationRecord,
+  VerifiableItem,
+  CreateVerificationRecordInput,
+  UpdateVerificationRecordInput
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -87,6 +91,27 @@ const api = {
       ipcRenderer.invoke('documents:replace', input),
     delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:delete', id),
     open: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:open', id)
+  },
+  verification: {
+    itemsNeedingVerification: (clientId: string): Promise<VerifiableItem[]> =>
+      ipcRenderer.invoke('verification:itemsNeedingVerification', clientId),
+    list: (clientId: string): Promise<VerificationRecord[]> =>
+      ipcRenderer.invoke('verification:list', clientId),
+    create: (input: CreateVerificationRecordInput): Promise<VerificationRecord> =>
+      ipcRenderer.invoke('verification:create', input),
+    update: (input: UpdateVerificationRecordInput): Promise<VerificationRecord> =>
+      ipcRenderer.invoke('verification:update', input),
+    delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('verification:delete', id),
+    listDocuments: (
+      verificationRecordId: string
+    ): Promise<{ document: DocumentRecord; linkId: string }[]> =>
+      ipcRenderer.invoke('verification:listDocuments', verificationRecordId),
+    linkDocument: (args: {
+      verificationRecordId: string
+      documentId: string
+    }): Promise<{ id: string }> => ipcRenderer.invoke('verification:linkDocument', args),
+    unlinkDocument: (linkId: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('verification:unlinkDocument', linkId)
   }
 }
 

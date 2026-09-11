@@ -1,4 +1,4 @@
-import type { DocumentCategory, WorkflowStage } from '@shared/ipc-types'
+import type { DocumentCategory, VerificationStatus, WorkflowStage } from '@shared/ipc-types'
 
 export const STAGE_LABELS: Record<WorkflowStage, string> = {
   information: 'Client & Information',
@@ -56,6 +56,20 @@ export const DOCUMENT_CATEGORY_ORDER: DocumentCategory[] = [
   'gsr_draft',
   'other'
 ]
+
+export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
+  not_required: 'Not Required',
+  pending: 'Pending',
+  verified: 'Verified',
+  could_not_verify: 'Could Not Verify'
+}
+
+export const VERIFICATION_STATUS_COLORS: Record<VerificationStatus, { fg: string; bg: string }> = {
+  not_required: { fg: 'var(--md-on-surface-variant)', bg: 'var(--md-surface-container-high)' },
+  pending: { fg: 'var(--status-yellow)', bg: 'var(--status-yellow-bg)' },
+  verified: { fg: 'var(--status-green)', bg: 'var(--status-green-bg)' },
+  could_not_verify: { fg: 'var(--status-red)', bg: 'var(--status-red-bg)' }
+}
 
 export function formatDate(iso: string | null): string {
   if (!iso) return '—'
