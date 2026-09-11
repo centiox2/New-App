@@ -284,3 +284,33 @@ export interface VerifiableItem {
   subtitle: string | null
   verificationRecord: VerificationRecord | null
 }
+
+// --- Evidence & Research (§8) ----------------------------------------------
+
+export interface EvidenceItem {
+  id: string
+  clientId: string
+  source: string | null
+  title: string
+  url: string | null
+  publicationInfo: string | null
+  excerpt: string | null
+  notes: string | null
+  provesWhat: string | null
+  documentId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateEvidenceInput {
+  clientId: string
+  source?: string | null
+  title: string
+  url?: string | null
+  publicationInfo?: string | null
+  excerpt?: string | null
+  notes?: string | null
+  provesWhat?: string | null
+}
+
+export type UpdateEvidenceInput = Partial<CreateEvidenceInput> & { id: string }

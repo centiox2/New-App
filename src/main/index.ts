@@ -8,6 +8,7 @@ import { registerSettingsHandlers } from './ipc/settings'
 import { registerInformationHandlers } from './ipc/information'
 import { registerDocumentHandlers } from './ipc/documents'
 import { registerVerificationHandlers } from './ipc/verification'
+import { registerEvidenceHandlers } from './ipc/evidence'
 
 function createWindow(): void {
   // Create the browser window.
@@ -70,6 +71,7 @@ app.whenReady().then(() => {
   registerInformationHandlers()
   registerDocumentHandlers()
   registerVerificationHandlers()
+  registerEvidenceHandlers()
 
   createWindow()
 

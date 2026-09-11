@@ -6,6 +6,7 @@ import { STAGE_LABELS, STAGE_ORDER, formatDate } from '../lib/format'
 import { InformationStage } from './InformationStage'
 import { DocumentsStage } from './DocumentsStage'
 import { VerificationStage } from './VerificationStage'
+import { EvidenceStage } from './EvidenceStage'
 
 const STATUS_OPTIONS: ClientStatus[] = ['red', 'yellow', 'green']
 
@@ -155,6 +156,8 @@ export function ClientWorkspace(): React.JSX.Element {
           <DocumentsStage clientId={clientId} />
         ) : stage === 'verification' ? (
           <VerificationStage clientId={clientId} />
+        ) : stage === 'evidence' ? (
+          <EvidenceStage clientId={clientId} />
         ) : (
           <StagePlaceholder stage={stage} />
         )}

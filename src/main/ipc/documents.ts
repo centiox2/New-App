@@ -1,11 +1,10 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
-import { randomUUID } from 'crypto'
-import { copyFileSync, existsSync, unlinkSync } from 'fs'
-import { basename, extname, join } from 'path'
+import { existsSync, unlinkSync } from 'fs'
+import { basename, extname } from 'path'
 import { eq, and, desc } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { documents } from '../db/schema'
-import { getClientFolder } from '../storage/paths'
+import { storeDocumentFile, absoluteDocumentPath } from '../storage/documentFiles'
 import { logAudit } from '../audit'
 import type {
   CreateDocumentInput,
@@ -13,19 +12,6 @@ import type {
   ReplaceDocumentInput,
   UpdateDocumentInput
 } from '../../shared/ipc-types'
-
-/** Copies a source file into the client's documents folder under a collision-proof name. */
-function storeFile(clientId: string, sourcePath: string): string {
-  const ext = extname(sourcePath)
-  const storedName = `${randomUUID()}${ext}`
-  const destAbsolute = join(getClientFolder(clientId, 'documents'), storedName)
-  copyFileSync(sourcePath, destAbsolute)
-  return storedName // stored relative to the client's documents folder
-}
-
-function absolutePathFor(clientId: string, relativeFilePath: string): string {
-  return join(getClientFolder(clientId, 'documents'), relativeFilePath)
-}
 
 export function registerDocumentHandlers(): void {
   ipcMain.handle('documents:list', async (_e, clientId: string) => {
@@ -58,7 +44,7 @@ export function registerDocumentHandlers(): void {
 
   ipcMain.handle('documents:create', async (_e, input: CreateDocumentInput) => {
     const db = getDb()
-    const storedRelativePath = storeFile(input.clientId, input.sourcePath)
+    const storedRelativePath = storeDocumentFile(input.clientId, input.sourcePath)
     const [row] = await db
       .insert(documents)
       .values({
@@ -96,7 +82,7 @@ export function registerDocumentHandlers(): void {
     const [existing] = await db.select().from(documents).where(eq(documents.id, input.id))
     if (!existing) throw new Error(`Document ${input.id} not found`)
 
-    const storedRelativePath = storeFile(existing.clientId, input.sourcePath)
+    const storedRelativePath = storeDocumentFile(existing.clientId, input.sourcePath)
     const [newRow] = await db
       .insert(documents)
       .values({
@@ -127,7 +113,7 @@ export function registerDocumentHandlers(): void {
     const db = getDb()
     const [row] = await db.select().from(documents).where(eq(documents.id, id))
     if (row) {
-      const abs = absolutePathFor(row.clientId, row.filePath)
+      const abs = absoluteDocumentPath(row.clientId, row.filePath)
       try {
         if (existsSync(abs)) unlinkSync(abs)
       } catch (err) {
@@ -144,7 +130,7 @@ export function registerDocumentHandlers(): void {
     const db = getDb()
     const [row] = await db.select().from(documents).where(eq(documents.id, id))
     if (!row) throw new Error(`Document ${id} not found`)
-    const abs = absolutePathFor(row.clientId, row.filePath)
+    const abs = absoluteDocumentPath(row.clientId, row.filePath)
     const result = await shell.openPath(abs)
     if (result) throw new Error(result)
     return { ok: true }

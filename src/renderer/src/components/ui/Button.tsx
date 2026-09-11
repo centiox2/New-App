@@ -23,7 +23,7 @@ export function Button({
 }: ButtonProps): React.JSX.Element {
   return (
     <button
-      className={`app-no-drag inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+      className={`app-no-drag inline-flex flex-shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
       {...props}
     />
   )

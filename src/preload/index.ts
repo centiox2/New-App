@@ -24,7 +24,10 @@ import type {
   VerificationRecord,
   VerifiableItem,
   CreateVerificationRecordInput,
-  UpdateVerificationRecordInput
+  UpdateVerificationRecordInput,
+  EvidenceItem,
+  CreateEvidenceInput,
+  UpdateEvidenceInput
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -112,6 +115,19 @@ const api = {
     }): Promise<{ id: string }> => ipcRenderer.invoke('verification:linkDocument', args),
     unlinkDocument: (linkId: string): Promise<{ ok: true }> =>
       ipcRenderer.invoke('verification:unlinkDocument', linkId)
+  },
+  evidence: {
+    list: (clientId: string): Promise<EvidenceItem[]> =>
+      ipcRenderer.invoke('evidence:list', clientId),
+    create: (input: CreateEvidenceInput): Promise<EvidenceItem> =>
+      ipcRenderer.invoke('evidence:create', input),
+    update: (input: UpdateEvidenceInput): Promise<EvidenceItem> =>
+      ipcRenderer.invoke('evidence:update', input),
+    delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('evidence:delete', id),
+    attachFile: (evidenceId: string): Promise<EvidenceItem> =>
+      ipcRenderer.invoke('evidence:attachFile', evidenceId),
+    removeFile: (evidenceId: string): Promise<EvidenceItem> =>
+      ipcRenderer.invoke('evidence:removeFile', evidenceId)
   }
 }
 
