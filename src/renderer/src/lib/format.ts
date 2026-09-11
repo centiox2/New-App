@@ -1,4 +1,4 @@
-import type { WorkflowStage } from '@shared/ipc-types'
+import type { DocumentCategory, WorkflowStage } from '@shared/ipc-types'
 
 export const STAGE_LABELS: Record<WorkflowStage, string> = {
   information: 'Client & Information',
@@ -32,6 +32,30 @@ export function formatRelativeDate(iso: string): string {
   if (diffDays < 30) return `${diffDays}d ago`
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
+
+export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
+  identity_personal: 'Identity & Personal',
+  education: 'Education',
+  employment: 'Employment',
+  financial: 'Financial',
+  australian_study: 'Australian Study',
+  verification_correspondence: 'Verification Correspondence',
+  evidence_research: 'Evidence / Research',
+  gsr_draft: 'GSR Drafts & Finalized',
+  other: 'Other'
+}
+
+export const DOCUMENT_CATEGORY_ORDER: DocumentCategory[] = [
+  'identity_personal',
+  'education',
+  'employment',
+  'financial',
+  'australian_study',
+  'verification_correspondence',
+  'evidence_research',
+  'gsr_draft',
+  'other'
+]
 
 export function formatDate(iso: string | null): string {
   if (!iso) return '—'

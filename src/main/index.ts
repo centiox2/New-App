@@ -6,6 +6,7 @@ import { initDb } from './db/client'
 import { registerClientHandlers } from './ipc/clients'
 import { registerSettingsHandlers } from './ipc/settings'
 import { registerInformationHandlers } from './ipc/information'
+import { registerDocumentHandlers } from './ipc/documents'
 
 function createWindow(): void {
   // Create the browser window.
@@ -66,6 +67,7 @@ app.whenReady().then(() => {
   registerClientHandlers()
   registerSettingsHandlers()
   registerInformationHandlers()
+  registerDocumentHandlers()
 
   createWindow()
 

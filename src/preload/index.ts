@@ -15,7 +15,12 @@ import type {
   EmploymentEntry,
   ImmigrationHistoryEntry,
   Sponsor,
-  IncomeSource
+  IncomeSource,
+  DocumentRecord,
+  PickedFile,
+  CreateDocumentInput,
+  UpdateDocumentInput,
+  ReplaceDocumentInput
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -69,6 +74,19 @@ const api = {
     immigration: makeCrudApi<ImmigrationHistoryEntry>('information:immigration'),
     sponsor: makeCrudApi<Sponsor>('information:sponsor'),
     incomeSource: makeCrudApi<IncomeSource>('information:incomeSource')
+  },
+  documents: {
+    list: (clientId: string): Promise<DocumentRecord[]> =>
+      ipcRenderer.invoke('documents:list', clientId),
+    pickFile: (): Promise<PickedFile | null> => ipcRenderer.invoke('documents:pickFile'),
+    create: (input: CreateDocumentInput): Promise<DocumentRecord> =>
+      ipcRenderer.invoke('documents:create', input),
+    update: (input: UpdateDocumentInput): Promise<DocumentRecord> =>
+      ipcRenderer.invoke('documents:update', input),
+    replace: (input: ReplaceDocumentInput): Promise<DocumentRecord> =>
+      ipcRenderer.invoke('documents:replace', input),
+    delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:delete', id),
+    open: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:open', id)
   }
 }
 

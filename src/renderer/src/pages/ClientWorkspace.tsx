@@ -4,6 +4,7 @@ import type { ClientStatus, ClientWithProgress, WorkflowStage } from '@shared/ip
 import { StatusBadge } from '../components/ui/StatusBadge'
 import { STAGE_LABELS, STAGE_ORDER, formatDate } from '../lib/format'
 import { InformationStage } from './InformationStage'
+import { DocumentsStage } from './DocumentsStage'
 
 const STATUS_OPTIONS: ClientStatus[] = ['red', 'yellow', 'green']
 
@@ -149,6 +150,8 @@ export function ClientWorkspace(): React.JSX.Element {
       <main className="flex-1 overflow-y-auto p-8">
         {stage === 'information' ? (
           <InformationStage clientId={clientId} />
+        ) : stage === 'documents' ? (
+          <DocumentsStage clientId={clientId} />
         ) : (
           <StagePlaceholder stage={stage} />
         )}

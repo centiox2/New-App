@@ -179,3 +179,58 @@ export interface IncomeSource {
   createdAt: string
   updatedAt: string
 }
+
+// --- Documents (§6) -------------------------------------------------------
+
+export type DocumentCategory =
+  | 'identity_personal'
+  | 'education'
+  | 'employment'
+  | 'financial'
+  | 'australian_study'
+  | 'verification_correspondence'
+  | 'evidence_research'
+  | 'gsr_draft'
+  | 'other'
+
+export interface DocumentRecord {
+  id: string
+  clientId: string
+  category: DocumentCategory
+  customCategory: string | null
+  label: string
+  filePath: string
+  notes: string | null
+  replacesDocumentId: string | null
+  isCurrentVersion: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PickedFile {
+  sourcePath: string
+  suggestedLabel: string
+  extension: string
+}
+
+export interface CreateDocumentInput {
+  clientId: string
+  category: DocumentCategory
+  customCategory?: string | null
+  label: string
+  notes?: string | null
+  sourcePath: string
+}
+
+export interface UpdateDocumentInput {
+  id: string
+  label?: string
+  category?: DocumentCategory
+  customCategory?: string | null
+  notes?: string | null
+}
+
+export interface ReplaceDocumentInput {
+  id: string
+  sourcePath: string
+}
