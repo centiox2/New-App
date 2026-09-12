@@ -40,7 +40,8 @@ import type {
   InformationEntityOption,
   DocumentInformationLink,
   BacklinkItem,
-  QuickSearchResult
+  QuickSearchResult,
+  CaseGraph
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -219,6 +220,10 @@ const api = {
   search: {
     quickSearch: (clientId: string, query: string): Promise<QuickSearchResult[]> =>
       ipcRenderer.invoke('search:quickSearch', { clientId, query })
+  },
+  graph: {
+    forClient: (clientId: string): Promise<CaseGraph> =>
+      ipcRenderer.invoke('graph:forClient', clientId)
   }
 }
 

@@ -11,6 +11,7 @@ import { GsrWritingStage } from './GsrWritingStage'
 import { ReviewStage } from './ReviewStage'
 import { FinalizationStage } from './FinalizationStage'
 import { QuickSwitcher } from '../components/search/QuickSwitcher'
+import { GraphView } from '../components/graph/GraphView'
 
 const STATUS_OPTIONS: ClientStatus[] = ['red', 'yellow', 'green']
 
@@ -19,6 +20,7 @@ export function ClientWorkspace(): React.JSX.Element {
   const navigate = useNavigate()
   const [client, setClient] = useState<ClientWithProgress | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showGraph, setShowGraph] = useState(false)
 
   const refresh = useCallback(async () => {
     if (!clientId) return
@@ -128,6 +130,12 @@ export function ClientWorkspace(): React.JSX.Element {
         <p className="mt-2 text-[10px] text-[var(--md-on-surface-variant)]">
           Press Ctrl/Cmd+K to search this case
         </p>
+        <button
+          className="app-no-drag mt-1 self-start text-[10px] text-[var(--md-primary)] hover:underline"
+          onClick={() => setShowGraph(true)}
+        >
+          🕸 Graph view
+        </button>
 
         <div className="mt-auto pt-4">
           <label className="text-xs text-[var(--md-on-surface-variant)]">
@@ -166,6 +174,7 @@ export function ClientWorkspace(): React.JSX.Element {
       </main>
 
       <QuickSwitcher clientId={clientId} />
+      {showGraph && <GraphView clientId={clientId} onClose={() => setShowGraph(false)} />}
     </div>
   )
 }

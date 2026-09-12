@@ -447,6 +447,44 @@ export interface QuickSearchResult {
   stage: WorkflowStage
 }
 
+// --- Graph view (Obsidian-inspired) -----------------------------------------
+
+export type GraphNodeKind =
+  | 'client'
+  | 'personal_profiles'
+  | 'education_entries'
+  | 'english_test_scores'
+  | 'australian_study_entries'
+  | 'employment_entries'
+  | 'immigration_history_entries'
+  | 'sponsors'
+  | 'income_sources'
+  | 'documents'
+  | 'verification_records'
+  | 'evidence_items'
+  | 'gsr_document'
+  | 'gsr_sections'
+  | 'gsr_statements'
+
+export interface GraphNode {
+  /** Unique across the whole graph: `${kind}:${entityId}`. */
+  id: string
+  kind: GraphNodeKind
+  entityId: string
+  label: string
+  stage: WorkflowStage
+}
+
+export interface GraphEdge {
+  source: string
+  target: string
+}
+
+export interface CaseGraph {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+}
+
 /** One node the given entity is referenced by, across every link/relationship in the schema. */
 export interface BacklinkItem {
   /** The underlying link/relationship row's id, where one exists (join tables) — otherwise the target's own id. */

@@ -14,6 +14,7 @@ import { registerReviewHandlers } from './ipc/review'
 import { registerFinalizationHandlers } from './ipc/finalization'
 import { registerLinkHandlers } from './ipc/links'
 import { registerSearchHandlers } from './ipc/search'
+import { registerGraphHandlers } from './ipc/graph'
 
 function createWindow(): void {
   // Create the browser window.
@@ -82,6 +83,7 @@ app.whenReady().then(() => {
   registerFinalizationHandlers()
   registerLinkHandlers()
   registerSearchHandlers()
+  registerGraphHandlers()
 
   createWindow()
 
