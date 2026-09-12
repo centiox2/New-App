@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: gsr-app
+appId: com.gsrcasemanager.app
+productName: GSR Case Manager
 directories:
   buildResources: build
 files:
@@ -37,7 +37,8 @@ linux:
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
-npmRebuild: false
+npmRebuild: true
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: github
+  owner: centiox2
+  repo: New-App
