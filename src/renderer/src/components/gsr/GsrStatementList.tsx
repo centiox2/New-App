@@ -1,18 +1,25 @@
 import { useState } from 'react'
-import type { EvidenceItem, GsrStatementWithEvidence } from '@shared/ipc-types'
+import type { EntityTag, EvidenceItem, GsrStatementWithEvidence } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
+import { TagEditor } from '../tags/TagEditor'
 
 export function GsrStatementList({
+  clientId,
   statements,
   availableEvidence,
+  tagsByStatement,
+  onTagsChanged,
   onAdd,
   onUpdate,
   onDelete,
   onLinkEvidence,
   onUnlinkEvidence
 }: {
+  clientId: string
   statements: GsrStatementWithEvidence[]
   availableEvidence: EvidenceItem[]
+  tagsByStatement?: Map<string, EntityTag[]>
+  onTagsChanged?: (statementId: string, tags: EntityTag[]) => void
   onAdd: (text: string) => void
   onUpdate: (id: string, text: string) => void
   onDelete: (id: string) => void
@@ -106,6 +113,18 @@ export function GsrStatementList({
                 </button>
               )}
             </div>
+
+            {onTagsChanged && (
+              <div className="mt-2">
+                <TagEditor
+                  clientId={clientId}
+                  entityType="gsr_statements"
+                  entityId={s.id}
+                  tags={tagsByStatement?.get(s.id) ?? []}
+                  onChange={(next) => onTagsChanged(s.id, next)}
+                />
+              </div>
+            )}
           </div>
         )
       })}

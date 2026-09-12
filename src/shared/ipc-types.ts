@@ -467,6 +467,16 @@ export interface GlobalSearchResult extends QuickSearchResult {
   clientName: string
 }
 
+// --- Tagging -----------------------------------------------------------
+
+export type TaggableEntityType = 'documents' | 'evidence_items' | 'gsr_statements'
+
+export interface EntityTag {
+  tagId: string
+  entityId: string
+  label: string
+}
+
 // --- Graph view (Obsidian-inspired) -----------------------------------------
 
 export type GraphNodeKind =

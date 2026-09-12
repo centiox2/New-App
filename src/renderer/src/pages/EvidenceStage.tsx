@@ -1,32 +1,60 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { DocumentRecord, EvidenceItem } from '@shared/ipc-types'
+import type { DocumentRecord, EntityTag, EvidenceItem } from '@shared/ipc-types'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { TextField } from '../components/ui/TextField'
 import { EvidenceCard } from '../components/evidence/EvidenceCard'
+import { TagFilterBar } from '../components/tags/TagFilterBar'
 
 export function EvidenceStage({ clientId }: { clientId: string }): React.JSX.Element {
   const [items, setItems] = useState<EvidenceItem[]>([])
   const [documents, setDocuments] = useState<DocumentRecord[]>([])
+  const [tags, setTags] = useState<EntityTag[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
+  const [activeTags, setActiveTags] = useState<string[]>([])
 
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const [rows, docs] = await Promise.all([
+      const [rows, docs, tagRows] = await Promise.all([
         window.api.evidence.list(clientId),
-        window.api.documents.list(clientId)
+        window.api.documents.list(clientId),
+        window.api.tags.listForClientEntityType(clientId, 'evidence_items')
       ])
       setItems(rows)
       setDocuments(docs)
+      setTags(tagRows)
     } finally {
       setLoading(false)
     }
   }, [clientId])
 
   const documentsById = useMemo(() => new Map(documents.map((d) => [d.id, d])), [documents])
+
+  const tagsByItem = useMemo(() => {
+    const map = new Map<string, EntityTag[]>()
+    for (const t of tags) map.set(t.entityId, [...(map.get(t.entityId) ?? []), t])
+    return map
+  }, [tags])
+
+  const distinctTagLabels = useMemo(
+    () => Array.from(new Set(tags.map((t) => t.label))).sort(),
+    [tags]
+  )
+
+  function toggleTagFilter(label: string): void {
+    setActiveTags((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    )
+  }
+
+  const filteredItems = items.filter(
+    (item) =>
+      activeTags.length === 0 ||
+      activeTags.every((label) => tagsByItem.get(item.id)?.some((t) => t.label === label))
+  )
 
   const refreshDocuments = useCallback(async () => {
     setDocuments(await window.api.documents.list(clientId))
@@ -83,6 +111,8 @@ export function EvidenceStage({ clientId }: { clientId: string }): React.JSX.Ele
         </div>
       )}
 
+      <TagFilterBar labels={distinctTagLabels} active={activeTags} onToggle={toggleTagFilter} />
+
       {loading ? (
         <p className="text-sm text-[var(--md-on-surface-variant)]">Loading…</p>
       ) : items.length === 0 && !adding ? (
@@ -93,11 +123,15 @@ export function EvidenceStage({ clientId }: { clientId: string }): React.JSX.Ele
         />
       ) : (
         <div className="flex flex-col gap-3">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <EvidenceCard
               key={item.id}
               item={item}
               document={item.documentId ? documentsById.get(item.documentId) : undefined}
+              tags={tagsByItem.get(item.id) ?? []}
+              onTagsChanged={(next) =>
+                setTags((prev) => [...prev.filter((t) => t.entityId !== item.id), ...next])
+              }
               onUpdated={(updated) => {
                 setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))
                 // Attach/remove may have created or freed a document row — resync the map.

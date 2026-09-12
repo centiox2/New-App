@@ -43,7 +43,9 @@ import type {
   QuickSearchResult,
   GlobalSearchResult,
   CaseGraph,
-  RecentClient
+  RecentClient,
+  EntityTag,
+  TaggableEntityType
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -232,6 +234,20 @@ const api = {
   graph: {
     forClient: (clientId: string): Promise<CaseGraph> =>
       ipcRenderer.invoke('graph:forClient', clientId)
+  },
+  tags: {
+    listForClientEntityType: (
+      clientId: string,
+      entityType: TaggableEntityType
+    ): Promise<EntityTag[]> =>
+      ipcRenderer.invoke('tags:listForClientEntityType', { clientId, entityType }),
+    add: (args: {
+      clientId: string
+      entityType: TaggableEntityType
+      entityId: string
+      label: string
+    }): Promise<EntityTag> => ipcRenderer.invoke('tags:add', args),
+    remove: (tagId: string): Promise<{ ok: true }> => ipcRenderer.invoke('tags:remove', tagId)
   }
 }
 

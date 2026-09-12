@@ -1,19 +1,24 @@
 import { useState } from 'react'
-import type { DocumentRecord, EvidenceItem } from '@shared/ipc-types'
+import type { DocumentRecord, EntityTag, EvidenceItem } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
 import { formatRelativeDate, isPdfFilePath } from '../../lib/format'
 import { PdfViewerModal } from '../pdf/PdfViewerModal'
 import { BacklinksPanel } from '../links/BacklinksPanel'
+import { TagEditor } from '../tags/TagEditor'
 
 export function EvidenceCard({
   item,
   document,
+  tags = [],
+  onTagsChanged,
   onUpdated,
   onDeleted
 }: {
   item: EvidenceItem
   /** The attached file's document row, when `item.documentId` is set — used to detect PDFs. */
   document?: DocumentRecord
+  tags?: EntityTag[]
+  onTagsChanged?: (tags: EntityTag[]) => void
   onUpdated: (item: EvidenceItem) => void
   onDeleted: (id: string) => void
 }): React.JSX.Element {
@@ -227,6 +232,16 @@ export function EvidenceCard({
         </p>
       )}
       {item.notes && <p className="text-xs text-[var(--md-on-surface-variant)]">{item.notes}</p>}
+
+      {onTagsChanged && (
+        <TagEditor
+          clientId={item.clientId}
+          entityType="evidence_items"
+          entityId={item.id}
+          tags={tags}
+          onChange={onTagsChanged}
+        />
+      )}
 
       <div className="flex items-center gap-2 pt-1">
         {item.documentId ? (

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
+  EntityTag,
   EvidenceItem,
   GsrDocument,
   GsrSection,
@@ -16,21 +17,30 @@ export function GsrWritingStage({ clientId }: { clientId: string }): React.JSX.E
   const [content, setContent] = useState('')
   const [statements, setStatements] = useState<GsrStatementWithEvidence[]>([])
   const [evidence, setEvidence] = useState<EvidenceItem[]>([])
+  const [tags, setTags] = useState<EntityTag[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<number | null>(null)
+
+  const tagsByStatement = useMemo(() => {
+    const map = new Map<string, EntityTag[]>()
+    for (const t of tags) map.set(t.entityId, [...(map.get(t.entityId) ?? []), t])
+    return map
+  }, [tags])
 
   const init = useCallback(async () => {
     setLoading(true)
     try {
       const doc = await window.api.gsr.getOrCreateDocument(clientId)
-      const [sectionRows, evidenceRows] = await Promise.all([
+      const [sectionRows, evidenceRows, tagRows] = await Promise.all([
         window.api.gsr.listSections(doc.id),
-        window.api.evidence.list(clientId)
+        window.api.evidence.list(clientId),
+        window.api.tags.listForClientEntityType(clientId, 'gsr_statements')
       ])
       setGsrDoc(doc)
       setSections(sectionRows)
       setEvidence(evidenceRows)
+      setTags(tagRows)
       setActiveId(sectionRows[0]?.id ?? null)
     } finally {
       setLoading(false)
@@ -182,8 +192,13 @@ export function GsrWritingStage({ clientId }: { clientId: string }): React.JSX.E
               />
 
               <GsrStatementList
+                clientId={clientId}
                 statements={statements}
                 availableEvidence={evidence}
+                tagsByStatement={tagsByStatement}
+                onTagsChanged={(statementId, next) =>
+                  setTags((prev) => [...prev.filter((t) => t.entityId !== statementId), ...next])
+                }
                 onAdd={addStatement}
                 onUpdate={updateStatement}
                 onDelete={deleteStatement}

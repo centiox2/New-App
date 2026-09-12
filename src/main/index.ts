@@ -15,6 +15,7 @@ import { registerFinalizationHandlers } from './ipc/finalization'
 import { registerLinkHandlers } from './ipc/links'
 import { registerSearchHandlers } from './ipc/search'
 import { registerGraphHandlers } from './ipc/graph'
+import { registerTagHandlers } from './ipc/tags'
 
 function createWindow(): void {
   // Create the browser window.
@@ -84,6 +85,7 @@ app.whenReady().then(() => {
   registerLinkHandlers()
   registerSearchHandlers()
   registerGraphHandlers()
+  registerTagHandlers()
 
   createWindow()
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { DocumentCategory, DocumentRecord } from '@shared/ipc-types'
+import type { DocumentCategory, DocumentRecord, EntityTag } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
 import {
   DOCUMENT_CATEGORY_LABELS,
@@ -10,14 +10,25 @@ import {
 import { PdfViewerModal } from '../pdf/PdfViewerModal'
 import { LinkedInformationSection } from './LinkedInformationSection'
 import { BacklinksPanel } from '../links/BacklinksPanel'
+import { TagEditor } from '../tags/TagEditor'
 
 export function DocumentCard({
   doc,
+  tags = [],
+  onTagsChanged,
+  selectMode = false,
+  selected = false,
+  onToggleSelected,
   onUpdated,
   onReplaced,
   onDeleted
 }: {
   doc: DocumentRecord
+  tags?: EntityTag[]
+  onTagsChanged?: (tags: EntityTag[]) => void
+  selectMode?: boolean
+  selected?: boolean
+  onToggleSelected?: () => void
   onUpdated: (doc: DocumentRecord) => void
   onReplaced: (doc: DocumentRecord) => void
   onDeleted: (id: string) => void
@@ -153,6 +164,15 @@ export function DocumentCard({
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-4 py-3">
       <div className="flex items-start justify-between gap-3">
+        {selectMode && (
+          <input
+            type="checkbox"
+            className="app-no-drag mt-1 flex-shrink-0"
+            checked={selected}
+            onChange={onToggleSelected}
+            aria-label={`Select ${doc.label}`}
+          />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="truncate text-sm font-medium">{doc.label}</p>
@@ -173,78 +193,91 @@ export function DocumentCard({
           <p className="mt-1 text-xs text-[var(--md-on-surface-variant)]">
             Added {formatRelativeDate(doc.createdAt)}
           </p>
-        </div>
-        <div className="flex flex-shrink-0 flex-wrap justify-end gap-1">
-          {confirmDelete ? (
-            <>
-              <Button
-                variant="danger"
-                className="!px-2.5 !py-1 text-xs"
-                onClick={remove}
-                disabled={busy}
-              >
-                Confirm delete
-              </Button>
-              <Button
-                variant="text"
-                className="!px-2.5 !py-1 text-xs"
-                onClick={() => setConfirmDelete(false)}
-              >
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              {isPdf ? (
-                <>
-                  <Button
-                    variant="text"
-                    className="!px-2.5 !py-1 text-xs"
-                    onClick={() => setViewing(true)}
-                  >
-                    View
-                  </Button>
-                  <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
-                    Open externally
-                  </Button>
-                </>
-              ) : (
-                <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
-                  Open
-                </Button>
-              )}
-              <Button
-                variant="text"
-                className="!px-2.5 !py-1 text-xs"
-                onClick={() => setEditing(true)}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="text"
-                className="!px-2.5 !py-1 text-xs"
-                onClick={replace}
-                disabled={busy}
-              >
-                Replace
-              </Button>
-              <Button
-                variant="text"
-                className="!px-2.5 !py-1 text-xs text-[var(--md-error)]"
-                onClick={() => setConfirmDelete(true)}
-              >
-                Delete
-              </Button>
-              <Button
-                variant="text"
-                className="!px-2.5 !py-1 text-xs"
-                onClick={() => setShowRelated((v) => !v)}
-              >
-                {showRelated ? 'Hide links' : 'Links'}
-              </Button>
-            </>
+          {onTagsChanged && (
+            <div className="mt-1.5">
+              <TagEditor
+                clientId={doc.clientId}
+                entityType="documents"
+                entityId={doc.id}
+                tags={tags}
+                onChange={onTagsChanged}
+              />
+            </div>
           )}
         </div>
+        {!selectMode && (
+          <div className="flex flex-shrink-0 flex-wrap justify-end gap-1">
+            {confirmDelete ? (
+              <>
+                <Button
+                  variant="danger"
+                  className="!px-2.5 !py-1 text-xs"
+                  onClick={remove}
+                  disabled={busy}
+                >
+                  Confirm delete
+                </Button>
+                <Button
+                  variant="text"
+                  className="!px-2.5 !py-1 text-xs"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <>
+                {isPdf ? (
+                  <>
+                    <Button
+                      variant="text"
+                      className="!px-2.5 !py-1 text-xs"
+                      onClick={() => setViewing(true)}
+                    >
+                      View
+                    </Button>
+                    <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
+                      Open externally
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
+                    Open
+                  </Button>
+                )}
+                <Button
+                  variant="text"
+                  className="!px-2.5 !py-1 text-xs"
+                  onClick={() => setEditing(true)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="text"
+                  className="!px-2.5 !py-1 text-xs"
+                  onClick={replace}
+                  disabled={busy}
+                >
+                  Replace
+                </Button>
+                <Button
+                  variant="text"
+                  className="!px-2.5 !py-1 text-xs text-[var(--md-error)]"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete
+                </Button>
+                <Button
+                  variant="text"
+                  className="!px-2.5 !py-1 text-xs"
+                  onClick={() => setShowRelated((v) => !v)}
+                >
+                  {showRelated ? 'Hide links' : 'Links'}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {showRelated && !confirmDelete && (
