@@ -8,6 +8,7 @@
  */
 import m0000 from './0000_normal_black_bolt.sql?raw'
 import m0001 from './0001_nosy_may_parker.sql?raw'
+import m0002 from './0002_narrow_maestro.sql?raw'
 
 export interface Migration {
   version: number
@@ -16,5 +17,6 @@ export interface Migration {
 
 export const MIGRATIONS: Migration[] = [
   { version: 1, sql: m0000 },
-  { version: 2, sql: m0001 }
+  { version: 2, sql: m0001 },
+  { version: 3, sql: m0002 }
 ]

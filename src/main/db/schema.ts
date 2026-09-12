@@ -98,6 +98,9 @@ export const personalProfiles = sqliteTable('personal_profiles', {
   clientId: text('client_id')
     .notNull()
     .references(() => clients.id, { onDelete: 'cascade' }),
+  /** Core identity fields the GSR header block always needs — not folded into customFields. */
+  dateOfBirth: text('date_of_birth'),
+  passportNumber: text('passport_number'),
   contactInfo: text('contact_info'),
   residenceInfo: text('residence_info'),
   nextOfKin: text('next_of_kin'),

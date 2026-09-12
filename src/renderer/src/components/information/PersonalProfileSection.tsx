@@ -73,6 +73,27 @@ export function PersonalProfileSection({ clientId }: { clientId: string }): Reac
 
       <div className="flex flex-col gap-3 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] p-4">
         <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-[var(--md-on-surface-variant)]">
+              Date of birth
+            </label>
+            <input
+              type="date"
+              className="app-no-drag rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface)] px-2.5 py-1.5 text-sm"
+              value={draft.dateOfBirth ?? ''}
+              onChange={(e) => setDraft((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-[var(--md-on-surface-variant)]">
+              Passport number
+            </label>
+            <input
+              className="app-no-drag rounded-lg border border-[var(--md-outline-variant)] bg-[var(--md-surface)] px-2.5 py-1.5 text-sm"
+              value={draft.passportNumber ?? ''}
+              onChange={(e) => setDraft((prev) => ({ ...prev, passportNumber: e.target.value }))}
+            />
+          </div>
           {FIELDS.map((f) => (
             <div key={f.key as string} className="col-span-2 flex flex-col gap-1">
               <label className="text-xs font-medium text-[var(--md-on-surface-variant)]">

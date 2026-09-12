@@ -83,6 +83,8 @@ export type CustomFields = Record<string, string>
 export interface PersonalProfile {
   id: string
   clientId: string
+  dateOfBirth: string | null
+  passportNumber: string | null
   contactInfo: string | null
   residenceInfo: string | null
   nextOfKin: string | null

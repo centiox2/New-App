@@ -15,6 +15,13 @@
       "when": 1789194905607,
       "tag": "0001_nosy_may_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789195995545,
+      "tag": "0002_narrow_maestro",
+      "breakpoints": true
     }
   ]
 }

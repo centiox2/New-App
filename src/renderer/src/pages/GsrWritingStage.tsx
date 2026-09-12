@@ -9,6 +9,8 @@ import type {
 import { Button } from '../components/ui/Button'
 import { GsrSectionNav } from '../components/gsr/GsrSectionNav'
 import { GsrStatementList } from '../components/gsr/GsrStatementList'
+import { RichTextEditor } from '../components/gsr/RichTextEditor'
+import { GsrHeaderBlock } from '../components/gsr/GsrHeaderBlock'
 
 export function GsrWritingStage({ clientId }: { clientId: string }): React.JSX.Element {
   const [gsrDoc, setGsrDoc] = useState<GsrDocument | null>(null)
@@ -171,6 +173,8 @@ export function GsrWritingStage({ clientId }: { clientId: string }): React.JSX.E
 
       <div className="flex flex-1 gap-6 overflow-hidden">
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto pb-8 pr-2">
+          <GsrHeaderBlock clientId={clientId} />
+
           {activeSection ? (
             <>
               <div className="flex items-center justify-between">
@@ -184,11 +188,11 @@ export function GsrWritingStage({ clientId }: { clientId: string }): React.JSX.E
                   </Button>
                 </div>
               </div>
-              <textarea
-                className="app-no-drag min-h-[280px] flex-shrink-0 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] p-4 text-sm leading-relaxed"
-                placeholder={`Write the ${activeSection.title.toLowerCase()} section…`}
+              <RichTextEditor
+                key={activeSection.id}
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={setContent}
+                placeholder={`Write the ${activeSection.title.toLowerCase()} section…`}
               />
 
               <GsrStatementList
