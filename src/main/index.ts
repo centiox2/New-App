@@ -11,6 +11,7 @@ import { registerVerificationHandlers } from './ipc/verification'
 import { registerEvidenceHandlers } from './ipc/evidence'
 import { registerGsrHandlers } from './ipc/gsr'
 import { registerReviewHandlers } from './ipc/review'
+import { registerFinalizationHandlers } from './ipc/finalization'
 
 function createWindow(): void {
   // Create the browser window.
@@ -76,6 +77,7 @@ app.whenReady().then(() => {
   registerEvidenceHandlers()
   registerGsrHandlers()
   registerReviewHandlers()
+  registerFinalizationHandlers()
 
   createWindow()
 

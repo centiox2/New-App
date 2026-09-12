@@ -32,7 +32,10 @@ import type {
   GsrSection,
   GsrStatementWithEvidence,
   ReviewSummary,
-  ChecklistDocument
+  ChecklistDocument,
+  ExportResult,
+  MergeResult,
+  GsrDocumentStatus
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -171,6 +174,22 @@ const api = {
     upload: (clientId: string): Promise<ChecklistDocument | null> =>
       ipcRenderer.invoke('checklist:upload', clientId),
     remove: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('checklist:remove', id)
+  },
+  finalization: {
+    getStatus: (clientId: string): Promise<GsrDocumentStatus> =>
+      ipcRenderer.invoke('finalization:getStatus', clientId),
+    setStatus: (clientId: string, status: GsrDocumentStatus): Promise<GsrDocumentStatus> =>
+      ipcRenderer.invoke('finalization:setStatus', { clientId, status }),
+    exportWord: (clientId: string): Promise<ExportResult> =>
+      ipcRenderer.invoke('finalization:exportWord', clientId),
+    exportPdf: (clientId: string): Promise<ExportResult> =>
+      ipcRenderer.invoke('finalization:exportPdf', clientId),
+    mergeEvidencePack: (clientId: string): Promise<MergeResult> =>
+      ipcRenderer.invoke('finalization:mergeEvidencePack', clientId),
+    openExportsFolder: (clientId: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('finalization:openExportsFolder', clientId),
+    revealFile: (path: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('finalization:revealFile', path)
   }
 }
 

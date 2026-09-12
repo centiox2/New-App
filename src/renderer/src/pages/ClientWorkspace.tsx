@@ -9,18 +9,9 @@ import { VerificationStage } from './VerificationStage'
 import { EvidenceStage } from './EvidenceStage'
 import { GsrWritingStage } from './GsrWritingStage'
 import { ReviewStage } from './ReviewStage'
+import { FinalizationStage } from './FinalizationStage'
 
 const STATUS_OPTIONS: ClientStatus[] = ['red', 'yellow', 'green']
-
-const STAGE_PHASE: Record<WorkflowStage, string> = {
-  information: 'Phase 2',
-  documents: 'Phase 2–3',
-  verification: 'Phase 4',
-  evidence: 'Phase 5',
-  writing: 'Phase 6–7',
-  review: 'Phase 8',
-  finalization: 'Phase 9'
-}
 
 export function ClientWorkspace(): React.JSX.Element {
   const { clientId, stage } = useParams<{ clientId: string; stage?: WorkflowStage }>()
@@ -165,25 +156,9 @@ export function ClientWorkspace(): React.JSX.Element {
         ) : stage === 'review' ? (
           <ReviewStage clientId={clientId} />
         ) : (
-          <StagePlaceholder stage={stage} />
+          <FinalizationStage clientId={clientId} />
         )}
       </main>
-    </div>
-  )
-}
-
-function StagePlaceholder({ stage }: { stage: WorkflowStage }): React.JSX.Element {
-  return (
-    <div
-      className="flex max-w-2xl flex-col gap-3 rounded-2xl p-8"
-      style={{ backgroundColor: 'var(--md-surface-container)', boxShadow: 'var(--md-elevation-1)' }}
-    >
-      <h2 className="text-lg font-semibold">{STAGE_LABELS[stage]}</h2>
-      <p className="text-sm text-[var(--md-on-surface-variant)]">
-        This stage&apos;s full workspace (per SPECIFICATION.md) is built in {STAGE_PHASE[stage]} of
-        the development roadmap. The client record, status, and overall stage tracking above are
-        already live and stored locally.
-      </p>
     </div>
   )
 }

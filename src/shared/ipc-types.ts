@@ -368,6 +368,16 @@ export interface UnsupportedStatement {
   sectionTitle: string
 }
 
+export interface ExportResult {
+  path: string
+  filename: string
+}
+
+export interface MergeResult extends ExportResult {
+  mergedCount: number
+  skippedCount: number
+}
+
 export interface ReviewSummary {
   documentsCount: number
   verification: {

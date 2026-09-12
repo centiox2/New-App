@@ -25,7 +25,9 @@
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "better-sqlite3": "^13.0.3",
+    "docx": "^9.7.1",
     "drizzle-orm": "^0.45.2",
+    "pdf-lib": "^1.17.1",
     "react-router-dom": "^7.18.3",
     "zod": "^4.6.2"
   },
