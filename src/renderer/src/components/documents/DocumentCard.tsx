@@ -4,8 +4,10 @@ import { Button } from '../ui/Button'
 import {
   DOCUMENT_CATEGORY_LABELS,
   DOCUMENT_CATEGORY_ORDER,
-  formatRelativeDate
+  formatRelativeDate,
+  isPdfFilePath
 } from '../../lib/format'
+import { PdfViewerModal } from '../pdf/PdfViewerModal'
 
 export function DocumentCard({
   doc,
@@ -27,6 +29,8 @@ export function DocumentCard({
   })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [viewing, setViewing] = useState(false)
+  const isPdf = isPdfFilePath(doc.filePath)
 
   async function save(): Promise<void> {
     setBusy(true)
@@ -187,9 +191,24 @@ export function DocumentCard({
           </>
         ) : (
           <>
-            <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
-              Open
-            </Button>
+            {isPdf ? (
+              <>
+                <Button
+                  variant="text"
+                  className="!px-2.5 !py-1 text-xs"
+                  onClick={() => setViewing(true)}
+                >
+                  View
+                </Button>
+                <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
+                  Open externally
+                </Button>
+              </>
+            ) : (
+              <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
+                Open
+              </Button>
+            )}
             <Button
               variant="text"
               className="!px-2.5 !py-1 text-xs"
@@ -215,6 +234,9 @@ export function DocumentCard({
           </>
         )}
       </div>
+      {viewing && (
+        <PdfViewerModal documentId={doc.id} label={doc.label} onClose={() => setViewing(false)} />
+      )}
     </div>
   )
 }

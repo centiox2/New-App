@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import type { EvidenceItem } from '@shared/ipc-types'
+import type { DocumentRecord, EvidenceItem } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
-import { formatRelativeDate } from '../../lib/format'
+import { formatRelativeDate, isPdfFilePath } from '../../lib/format'
+import { PdfViewerModal } from '../pdf/PdfViewerModal'
 
 export function EvidenceCard({
   item,
+  document,
   onUpdated,
   onDeleted
 }: {
   item: EvidenceItem
+  /** The attached file's document row, when `item.documentId` is set — used to detect PDFs. */
+  document?: DocumentRecord
   onUpdated: (item: EvidenceItem) => void
   onDeleted: (id: string) => void
 }): React.JSX.Element {
@@ -24,6 +28,8 @@ export function EvidenceCard({
   })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [viewing, setViewing] = useState(false)
+  const isPdf = document ? isPdfFilePath(document.filePath) : false
 
   async function save(): Promise<void> {
     setBusy(true)
@@ -224,9 +230,19 @@ export function EvidenceCard({
       <div className="flex items-center gap-2 pt-1">
         {item.documentId ? (
           <>
-            <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={openFile}>
-              Open attached file
-            </Button>
+            {isPdf ? (
+              <Button
+                variant="text"
+                className="!px-2.5 !py-1 text-xs"
+                onClick={() => setViewing(true)}
+              >
+                View attached PDF
+              </Button>
+            ) : (
+              <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={openFile}>
+                Open attached file
+              </Button>
+            )}
             <Button
               variant="text"
               className="!px-2.5 !py-1 text-xs"
@@ -250,6 +266,13 @@ export function EvidenceCard({
           Added {formatRelativeDate(item.createdAt)}
         </span>
       </div>
+      {viewing && item.documentId && (
+        <PdfViewerModal
+          documentId={item.documentId}
+          label={item.title}
+          onClose={() => setViewing(false)}
+        />
+      )}
     </div>
   )
 }

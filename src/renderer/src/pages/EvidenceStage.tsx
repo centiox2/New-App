@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import type { EvidenceItem } from '@shared/ipc-types'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { DocumentRecord, EvidenceItem } from '@shared/ipc-types'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { TextField } from '../components/ui/TextField'
@@ -7,6 +7,7 @@ import { EvidenceCard } from '../components/evidence/EvidenceCard'
 
 export function EvidenceStage({ clientId }: { clientId: string }): React.JSX.Element {
   const [items, setItems] = useState<EvidenceItem[]>([])
+  const [documents, setDocuments] = useState<DocumentRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -14,11 +15,21 @@ export function EvidenceStage({ clientId }: { clientId: string }): React.JSX.Ele
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const rows = await window.api.evidence.list(clientId)
+      const [rows, docs] = await Promise.all([
+        window.api.evidence.list(clientId),
+        window.api.documents.list(clientId)
+      ])
       setItems(rows)
+      setDocuments(docs)
     } finally {
       setLoading(false)
     }
+  }, [clientId])
+
+  const documentsById = useMemo(() => new Map(documents.map((d) => [d.id, d])), [documents])
+
+  const refreshDocuments = useCallback(async () => {
+    setDocuments(await window.api.documents.list(clientId))
   }, [clientId])
 
   useEffect(() => {
@@ -86,9 +97,12 @@ export function EvidenceStage({ clientId }: { clientId: string }): React.JSX.Ele
             <EvidenceCard
               key={item.id}
               item={item}
-              onUpdated={(updated) =>
+              document={item.documentId ? documentsById.get(item.documentId) : undefined}
+              onUpdated={(updated) => {
                 setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)))
-              }
+                // Attach/remove may have created or freed a document row — resync the map.
+                refreshDocuments()
+              }}
               onDeleted={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
             />
           ))}

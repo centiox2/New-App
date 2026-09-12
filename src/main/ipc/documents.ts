@@ -1,5 +1,5 @@
 import { ipcMain, dialog, shell, BrowserWindow } from 'electron'
-import { existsSync, unlinkSync } from 'fs'
+import { existsSync, unlinkSync, readFileSync } from 'fs'
 import { basename, extname } from 'path'
 import { eq, and, desc } from 'drizzle-orm'
 import { getDb } from '../db/client'
@@ -134,5 +134,15 @@ export function registerDocumentHandlers(): void {
     const result = await shell.openPath(abs)
     if (result) throw new Error(result)
     return { ok: true }
+  })
+
+  // Renderer has no filesystem access (context isolation) — the in-app PDF
+  // viewer reads bytes through here rather than a file:// URL.
+  ipcMain.handle('documents:readFile', async (_e, id: string): Promise<Uint8Array> => {
+    const db = getDb()
+    const [row] = await db.select().from(documents).where(eq(documents.id, id))
+    if (!row) throw new Error(`Document ${id} not found`)
+    const abs = absoluteDocumentPath(row.clientId, row.filePath)
+    return new Uint8Array(readFileSync(abs))
   })
 }

@@ -77,3 +77,8 @@ export function formatDate(iso: string | null): string {
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 }
+
+/** True when a stored document's file path is a PDF — the only type the in-app viewer supports. */
+export function isPdfFilePath(filePath: string): boolean {
+  return filePath.toLowerCase().endsWith('.pdf')
+}

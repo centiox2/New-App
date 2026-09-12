@@ -3,7 +3,8 @@ import type { DocumentRecord, VerificationRecord, VerificationStatus } from '@sh
 import { Dialog } from '../ui/Dialog'
 import { TextField } from '../ui/TextField'
 import { Button } from '../ui/Button'
-import { formatDate } from '../../lib/format'
+import { formatDate, isPdfFilePath } from '../../lib/format'
+import { PdfViewerModal } from '../pdf/PdfViewerModal'
 
 const STATUS_OPTIONS: { value: VerificationStatus; label: string }[] = [
   { value: 'not_required', label: 'Not Required' },
@@ -41,6 +42,7 @@ export function VerificationRecordDialog({
   const [saving, setSaving] = useState(false)
   const [linkedDocs, setLinkedDocs] = useState<{ document: DocumentRecord; linkId: string }[]>([])
   const [attaching, setAttaching] = useState(false)
+  const [viewingDoc, setViewingDoc] = useState<DocumentRecord | null>(null)
 
   const loadLinkedDocs = useCallback(async (recordId: string) => {
     const rows = await window.api.verification.listDocuments(recordId)
@@ -269,7 +271,11 @@ export function VerificationRecordDialog({
                   >
                     <button
                       className="app-no-drag truncate text-left hover:underline"
-                      onClick={() => window.api.documents.open(document.id)}
+                      onClick={() =>
+                        isPdfFilePath(document.filePath)
+                          ? setViewingDoc(document)
+                          : window.api.documents.open(document.id)
+                      }
                     >
                       {document.label}
                     </button>
@@ -289,6 +295,13 @@ export function VerificationRecordDialog({
           </div>
         )}
       </div>
+      {viewingDoc && (
+        <PdfViewerModal
+          documentId={viewingDoc.id}
+          label={viewingDoc.label}
+          onClose={() => setViewingDoc(null)}
+        />
+      )}
     </Dialog>
   )
 }

@@ -101,7 +101,8 @@ const api = {
     replace: (input: ReplaceDocumentInput): Promise<DocumentRecord> =>
       ipcRenderer.invoke('documents:replace', input),
     delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:delete', id),
-    open: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:open', id)
+    open: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('documents:open', id),
+    readFile: (id: string): Promise<Uint8Array> => ipcRenderer.invoke('documents:readFile', id)
   },
   verification: {
     itemsNeedingVerification: (clientId: string): Promise<VerifiableItem[]> =>

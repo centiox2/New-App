@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ChecklistDocument, ReviewSummary } from '@shared/ipc-types'
 import { Button } from '../components/ui/Button'
+import { PdfViewerModal } from '../components/pdf/PdfViewerModal'
+import { isPdfFilePath } from '../lib/format'
 
 function StatTile({
   label,
@@ -34,6 +36,7 @@ export function ReviewStage({ clientId }: { clientId: string }): React.JSX.Eleme
   const [checklist, setChecklist] = useState<ChecklistDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [viewingChecklist, setViewingChecklist] = useState(false)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -161,7 +164,11 @@ export function ReviewStage({ clientId }: { clientId: string }): React.JSX.Eleme
               <Button
                 variant="text"
                 className="!px-2.5 !py-1 text-xs"
-                onClick={() => window.api.documents.open(checklist.sourceDocumentId)}
+                onClick={() =>
+                  isPdfFilePath(checklist.document.filePath)
+                    ? setViewingChecklist(true)
+                    : window.api.documents.open(checklist.sourceDocumentId)
+                }
               >
                 Open
               </Button>
@@ -185,6 +192,13 @@ export function ReviewStage({ clientId }: { clientId: string }): React.JSX.Eleme
           </Button>
         )}
       </section>
+      {viewingChecklist && checklist && (
+        <PdfViewerModal
+          documentId={checklist.sourceDocumentId}
+          label={checklist.document.label}
+          onClose={() => setViewingChecklist(false)}
+        />
+      )}
     </div>
   )
 }
