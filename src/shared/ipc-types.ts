@@ -395,3 +395,52 @@ export interface ReviewSummary {
     unsupportedStatements: UnsupportedStatement[]
   }
 }
+
+// --- Generic linking & backlinks (Obsidian-inspired) ------------------------
+
+/** The information-section entity tables a document (or anything else) can link to. */
+export type InformationEntityType =
+  | 'personal_profiles'
+  | 'education_entries'
+  | 'english_test_scores'
+  | 'australian_study_entries'
+  | 'employment_entries'
+  | 'immigration_history_entries'
+  | 'sponsors'
+  | 'income_sources'
+
+/** A document explicitly linked to one information entry (§6 — schema supported this already). */
+export interface DocumentInformationLink {
+  /** The link row's own id — pass this to unlink. */
+  linkId: string
+  entityType: InformationEntityType
+  entityId: string
+  label: string
+  subtitle: string | null
+}
+
+/** One selectable information entry, for the "link to…" picker. */
+export interface InformationEntityOption {
+  entityId: string
+  label: string
+  subtitle: string | null
+}
+
+/** One node the given entity is referenced by, across every link/relationship in the schema. */
+export interface BacklinkItem {
+  /** The underlying link/relationship row's id, where one exists (join tables) — otherwise the target's own id. */
+  linkId: string
+  kind:
+    | 'document'
+    | 'information'
+    | 'verification_record'
+    | 'evidence_item'
+    | 'gsr_statement'
+    | 'checklist'
+  targetId: string
+  /** Set only when kind === 'information'. */
+  entityType?: InformationEntityType
+  label: string
+  subtitle: string | null
+  stage: WorkflowStage
+}

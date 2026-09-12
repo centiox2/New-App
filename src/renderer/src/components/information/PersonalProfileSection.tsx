@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { CustomFields, PersonalProfile } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
 import { CustomFieldsEditor } from './CustomFieldsEditor'
+import { BacklinksPanel } from '../links/BacklinksPanel'
 
 const FIELDS: { key: keyof PersonalProfile; label: string; placeholder?: string }[] = [
   { key: 'contactInfo', label: 'Contact information', placeholder: 'Phone, email, address…' },
@@ -101,6 +102,8 @@ export function PersonalProfileSection({ clientId }: { clientId: string }): Reac
           </Button>
         </div>
       </div>
+
+      <BacklinksPanel clientId={clientId} entityType="personal_profiles" entityId={profile.id} />
     </section>
   )
 }

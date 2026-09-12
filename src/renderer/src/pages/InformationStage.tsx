@@ -60,6 +60,8 @@ export function InformationStage({ clientId }: { clientId: string }): React.JSX.
             title="Education"
             description="Primary, secondary, and post-secondary education history."
             parentId={clientId}
+            clientId={clientId}
+            entityType="education_entries"
             hasVerification
             titleField="institution"
             subtitleField="course"
@@ -107,6 +109,8 @@ export function InformationStage({ clientId }: { clientId: string }): React.JSX.
             title="English Test (IELTS / etc.)"
             description="Overall and component scores for each test attempt."
             parentId={clientId}
+            clientId={clientId}
+            entityType="english_test_scores"
             hasVerification
             titleField="overallScore"
             subtitleField="testDate"
@@ -134,6 +138,8 @@ export function InformationStage({ clientId }: { clientId: string }): React.JSX.
             title="Australian Study"
             description="Intended institution, course, and CoE information — repeatable for multiple CoEs."
             parentId={clientId}
+            clientId={clientId}
+            entityType="australian_study_entries"
             titleField="institutionProvider"
             subtitleField="course"
             emptyLabel="No Australian study entries added yet"
@@ -154,6 +160,8 @@ export function InformationStage({ clientId }: { clientId: string }): React.JSX.
           <RepeatableEntitySection<EmploymentEntry>
             title="Employment"
             parentId={clientId}
+            clientId={clientId}
+            entityType="employment_entries"
             hasVerification
             titleField="employer"
             subtitleField="jobTitle"
@@ -177,6 +185,8 @@ export function InformationStage({ clientId }: { clientId: string }): React.JSX.
           <RepeatableEntitySection<ImmigrationHistoryEntry>
             title="Immigration / Residence History"
             parentId={clientId}
+            clientId={clientId}
+            entityType="immigration_history_entries"
             titleField="description"
             subtitleField="dateFrom"
             emptyLabel="No immigration history entries added yet"

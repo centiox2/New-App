@@ -8,6 +8,8 @@ import {
   isPdfFilePath
 } from '../../lib/format'
 import { PdfViewerModal } from '../pdf/PdfViewerModal'
+import { LinkedInformationSection } from './LinkedInformationSection'
+import { BacklinksPanel } from '../links/BacklinksPanel'
 
 export function DocumentCard({
   doc,
@@ -30,6 +32,7 @@ export function DocumentCard({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy] = useState(false)
   const [viewing, setViewing] = useState(false)
+  const [showRelated, setShowRelated] = useState(false)
   const isPdf = isPdfFilePath(doc.filePath)
 
   async function save(): Promise<void> {
@@ -148,92 +151,115 @@ export function DocumentCard({
   }
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-4 py-3">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-medium">{doc.label}</p>
-          <span className="flex-shrink-0 rounded-full bg-[var(--md-secondary-container)] px-2 py-0.5 text-[10px] font-semibold text-[var(--md-on-secondary-container)]">
-            {doc.category === 'other' && doc.customCategory
-              ? doc.customCategory
-              : DOCUMENT_CATEGORY_LABELS[doc.category]}
-          </span>
-          {doc.replacesDocumentId && (
-            <span className="flex-shrink-0 text-[10px] text-[var(--md-on-surface-variant)]">
-              replaces a previous version
+    <div className="flex flex-col gap-3 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-4 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-medium">{doc.label}</p>
+            <span className="flex-shrink-0 rounded-full bg-[var(--md-secondary-container)] px-2 py-0.5 text-[10px] font-semibold text-[var(--md-on-secondary-container)]">
+              {doc.category === 'other' && doc.customCategory
+                ? doc.customCategory
+                : DOCUMENT_CATEGORY_LABELS[doc.category]}
             </span>
+            {doc.replacesDocumentId && (
+              <span className="flex-shrink-0 text-[10px] text-[var(--md-on-surface-variant)]">
+                replaces a previous version
+              </span>
+            )}
+          </div>
+          {doc.notes && (
+            <p className="mt-1 truncate text-xs text-[var(--md-on-surface-variant)]">{doc.notes}</p>
+          )}
+          <p className="mt-1 text-xs text-[var(--md-on-surface-variant)]">
+            Added {formatRelativeDate(doc.createdAt)}
+          </p>
+        </div>
+        <div className="flex flex-shrink-0 flex-wrap justify-end gap-1">
+          {confirmDelete ? (
+            <>
+              <Button
+                variant="danger"
+                className="!px-2.5 !py-1 text-xs"
+                onClick={remove}
+                disabled={busy}
+              >
+                Confirm delete
+              </Button>
+              <Button
+                variant="text"
+                className="!px-2.5 !py-1 text-xs"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              {isPdf ? (
+                <>
+                  <Button
+                    variant="text"
+                    className="!px-2.5 !py-1 text-xs"
+                    onClick={() => setViewing(true)}
+                  >
+                    View
+                  </Button>
+                  <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
+                    Open externally
+                  </Button>
+                </>
+              ) : (
+                <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
+                  Open
+                </Button>
+              )}
+              <Button
+                variant="text"
+                className="!px-2.5 !py-1 text-xs"
+                onClick={() => setEditing(true)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="text"
+                className="!px-2.5 !py-1 text-xs"
+                onClick={replace}
+                disabled={busy}
+              >
+                Replace
+              </Button>
+              <Button
+                variant="text"
+                className="!px-2.5 !py-1 text-xs text-[var(--md-error)]"
+                onClick={() => setConfirmDelete(true)}
+              >
+                Delete
+              </Button>
+              <Button
+                variant="text"
+                className="!px-2.5 !py-1 text-xs"
+                onClick={() => setShowRelated((v) => !v)}
+              >
+                {showRelated ? 'Hide links' : 'Links'}
+              </Button>
+            </>
           )}
         </div>
-        {doc.notes && (
-          <p className="mt-1 truncate text-xs text-[var(--md-on-surface-variant)]">{doc.notes}</p>
-        )}
-        <p className="mt-1 text-xs text-[var(--md-on-surface-variant)]">
-          Added {formatRelativeDate(doc.createdAt)}
-        </p>
       </div>
-      <div className="flex flex-shrink-0 flex-wrap justify-end gap-1">
-        {confirmDelete ? (
-          <>
-            <Button
-              variant="danger"
-              className="!px-2.5 !py-1 text-xs"
-              onClick={remove}
-              disabled={busy}
-            >
-              Confirm delete
-            </Button>
-            <Button
-              variant="text"
-              className="!px-2.5 !py-1 text-xs"
-              onClick={() => setConfirmDelete(false)}
-            >
-              Cancel
-            </Button>
-          </>
-        ) : (
-          <>
-            {isPdf ? (
-              <>
-                <Button
-                  variant="text"
-                  className="!px-2.5 !py-1 text-xs"
-                  onClick={() => setViewing(true)}
-                >
-                  View
-                </Button>
-                <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
-                  Open externally
-                </Button>
-              </>
-            ) : (
-              <Button variant="text" className="!px-2.5 !py-1 text-xs" onClick={open}>
-                Open
-              </Button>
-            )}
-            <Button
-              variant="text"
-              className="!px-2.5 !py-1 text-xs"
-              onClick={() => setEditing(true)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="text"
-              className="!px-2.5 !py-1 text-xs"
-              onClick={replace}
-              disabled={busy}
-            >
-              Replace
-            </Button>
-            <Button
-              variant="text"
-              className="!px-2.5 !py-1 text-xs text-[var(--md-error)]"
-              onClick={() => setConfirmDelete(true)}
-            >
-              Delete
-            </Button>
-          </>
-        )}
-      </div>
+
+      {showRelated && !confirmDelete && (
+        <div className="flex flex-col gap-3 border-t border-[var(--md-outline-variant)] pt-3">
+          <LinkedInformationSection clientId={doc.clientId} documentId={doc.id} />
+          <BacklinksPanel
+            clientId={doc.clientId}
+            entityType="documents"
+            entityId={doc.id}
+            excludeKinds={['information']}
+            emptyHint="No verification, evidence, checklist, or other-document links yet."
+          />
+        </div>
+      )}
+
       {viewing && (
         <PdfViewerModal documentId={doc.id} label={doc.label} onClose={() => setViewing(false)} />
       )}

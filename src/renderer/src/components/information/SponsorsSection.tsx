@@ -4,6 +4,7 @@ import { Button } from '../ui/Button'
 import { EmptyState } from '../ui/EmptyState'
 import { CustomFieldsEditor } from './CustomFieldsEditor'
 import { RepeatableEntitySection } from './RepeatableEntitySection'
+import { BacklinksPanel } from '../links/BacklinksPanel'
 
 const INCOME_TYPE_OPTIONS = [
   { value: 'salary', label: 'Salary' },
@@ -150,10 +151,16 @@ export function SponsorsSection({ clientId }: { clientId: string }): React.JSX.E
                   </div>
                 </div>
 
+                <div className="mt-3">
+                  <BacklinksPanel clientId={clientId} entityType="sponsors" entityId={s.id} />
+                </div>
+
                 <div className="mt-4 border-l-2 border-[var(--md-outline-variant)] pl-4">
                   <RepeatableEntitySection<IncomeSource>
                     title="Income & asset sources"
                     parentId={s.id}
+                    clientId={clientId}
+                    entityType="income_sources"
                     hasVerification
                     titleField="description"
                     subtitleField="amount"

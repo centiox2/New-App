@@ -3,6 +3,7 @@ import type { DocumentRecord, EvidenceItem } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
 import { formatRelativeDate, isPdfFilePath } from '../../lib/format'
 import { PdfViewerModal } from '../pdf/PdfViewerModal'
+import { BacklinksPanel } from '../links/BacklinksPanel'
 
 export function EvidenceCard({
   item,
@@ -266,6 +267,8 @@ export function EvidenceCard({
           Added {formatRelativeDate(item.createdAt)}
         </span>
       </div>
+
+      <BacklinksPanel clientId={item.clientId} entityType="evidence_items" entityId={item.id} />
       {viewing && item.documentId && (
         <PdfViewerModal
           documentId={item.documentId}

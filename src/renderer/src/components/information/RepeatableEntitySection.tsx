@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { CustomFields } from '@shared/ipc-types'
+import type { CustomFields, InformationEntityType } from '@shared/ipc-types'
 import { Button } from '../ui/Button'
 import { EmptyState } from '../ui/EmptyState'
 import { CustomFieldsEditor } from './CustomFieldsEditor'
+import { BacklinksPanel } from '../links/BacklinksPanel'
 
 export interface FieldConfig {
   key: string
@@ -37,6 +38,8 @@ export function RepeatableEntitySection<T extends Entry>({
   title,
   description,
   parentId,
+  clientId,
+  entityType,
   fields,
   keyValueFields = [],
   hasVerification = false,
@@ -49,6 +52,10 @@ export function RepeatableEntitySection<T extends Entry>({
   title: string
   description?: string
   parentId: string
+  /** The owning client, for backlinks navigation — may differ from `parentId` (e.g. income sources nest under a sponsor). */
+  clientId: string
+  /** This entity table's name, matching document_information_links.entityType — powers the backlinks panel. */
+  entityType: InformationEntityType
   fields: FieldConfig[]
   keyValueFields?: KeyValueFieldConfig[]
   hasVerification?: boolean
@@ -148,62 +155,65 @@ export function RepeatableEntitySection<T extends Entry>({
             ) : (
               <div
                 key={item.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-4 py-3"
+                className="flex flex-col gap-2 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-4 py-3"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium">
-                      {(asRecord(item)[titleField] as string) || '(untitled)'}
-                    </p>
-                    {hasVerification && item.requiresVerification && (
-                      <span className="flex-shrink-0 rounded-full bg-[var(--status-yellow-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--status-yellow)]">
-                        Needs verification
-                      </span>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-medium">
+                        {(asRecord(item)[titleField] as string) || '(untitled)'}
+                      </p>
+                      {hasVerification && item.requiresVerification && (
+                        <span className="flex-shrink-0 rounded-full bg-[var(--status-yellow-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--status-yellow)]">
+                          Needs verification
+                        </span>
+                      )}
+                    </div>
+                    {subtitleField && asRecord(item)[subtitleField] != null && (
+                      <p className="truncate text-xs text-[var(--md-on-surface-variant)]">
+                        {String(asRecord(item)[subtitleField])}
+                      </p>
                     )}
                   </div>
-                  {subtitleField && asRecord(item)[subtitleField] != null && (
-                    <p className="truncate text-xs text-[var(--md-on-surface-variant)]">
-                      {String(asRecord(item)[subtitleField])}
-                    </p>
-                  )}
+                  <div className="flex flex-shrink-0 gap-1">
+                    {confirmDeleteId === item.id ? (
+                      <>
+                        <Button
+                          variant="danger"
+                          className="!px-2.5 !py-1 text-xs"
+                          onClick={() => remove(item.id)}
+                        >
+                          Confirm delete
+                        </Button>
+                        <Button
+                          variant="text"
+                          className="!px-2.5 !py-1 text-xs"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="text"
+                          className="!px-2.5 !py-1 text-xs"
+                          onClick={() => startEdit(item)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="text"
+                          className="!px-2.5 !py-1 text-xs text-[var(--md-error)]"
+                          onClick={() => setConfirmDeleteId(item.id)}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-shrink-0 gap-1">
-                  {confirmDeleteId === item.id ? (
-                    <>
-                      <Button
-                        variant="danger"
-                        className="!px-2.5 !py-1 text-xs"
-                        onClick={() => remove(item.id)}
-                      >
-                        Confirm delete
-                      </Button>
-                      <Button
-                        variant="text"
-                        className="!px-2.5 !py-1 text-xs"
-                        onClick={() => setConfirmDeleteId(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="text"
-                        className="!px-2.5 !py-1 text-xs"
-                        onClick={() => startEdit(item)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="text"
-                        className="!px-2.5 !py-1 text-xs text-[var(--md-error)]"
-                        onClick={() => setConfirmDeleteId(item.id)}
-                      >
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </div>
+                <BacklinksPanel clientId={clientId} entityType={entityType} entityId={item.id} />
               </div>
             )
           )

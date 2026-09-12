@@ -35,7 +35,11 @@ import type {
   ChecklistDocument,
   ExportResult,
   MergeResult,
-  GsrDocumentStatus
+  GsrDocumentStatus,
+  InformationEntityType,
+  InformationEntityOption,
+  DocumentInformationLink,
+  BacklinkItem
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -191,6 +195,25 @@ const api = {
       ipcRenderer.invoke('finalization:openExportsFolder', clientId),
     revealFile: (path: string): Promise<{ ok: true }> =>
       ipcRenderer.invoke('finalization:revealFile', path)
+  },
+  links: {
+    listInformationOptions: (
+      clientId: string,
+      entityType: InformationEntityType
+    ): Promise<InformationEntityOption[]> =>
+      ipcRenderer.invoke('links:listInformationOptions', { clientId, entityType }),
+    listForDocument: (documentId: string): Promise<DocumentInformationLink[]> =>
+      ipcRenderer.invoke('links:listForDocument', documentId),
+    linkDocumentToInformation: (args: {
+      documentId: string
+      entityType: InformationEntityType
+      entityId: string
+    }): Promise<DocumentInformationLink> =>
+      ipcRenderer.invoke('links:linkDocumentToInformation', args),
+    unlinkDocumentInformation: (linkId: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('links:unlinkDocumentInformation', linkId),
+    backlinksForEntity: (args: { entityType: string; entityId: string }): Promise<BacklinkItem[]> =>
+      ipcRenderer.invoke('links:backlinksForEntity', args)
   }
 }
 
