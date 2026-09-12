@@ -73,7 +73,20 @@ export const clients = sqliteTable('clients', {
     .notNull()
     .default('information'),
   targetIntakeDate: text('target_intake_date'),
+  /** Hidden from the default dashboard view but not deleted — for finished cases. */
+  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+  pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
   ...timestamps
+})
+
+/** One row per client, upserted on open — powers the "recently viewed" dashboard list. */
+export const clientVisits = sqliteTable('client_visits', {
+  clientId: text('client_id')
+    .primaryKey()
+    .references(() => clients.id, { onDelete: 'cascade' }),
+  lastViewedAt: text('last_viewed_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString())
 })
 
 // ---------------------------------------------------------------------------
@@ -535,6 +548,31 @@ export const checklistEvaluations = sqliteTable('checklist_evaluations', {
     .notNull()
     .$defaultFn(() => new Date().toISOString())
 })
+
+// ---------------------------------------------------------------------------
+// Tagging (spans documents / evidence / GSR statements)
+// ---------------------------------------------------------------------------
+
+/** Free-text labels on any taggable entity — generic entityType/entityId, same pattern as document_information_links. */
+export const entityTags = sqliteTable(
+  'entity_tags',
+  {
+    id: id(),
+    clientId: text('client_id')
+      .notNull()
+      .references(() => clients.id, { onDelete: 'cascade' }),
+    entityType: text('entity_type', {
+      enum: ['documents', 'evidence_items', 'gsr_statements']
+    }).notNull(),
+    entityId: text('entity_id').notNull(),
+    label: text('label').notNull(),
+    ...timestamps
+  },
+  (t) => [
+    index('entity_tags_client_idx').on(t.clientId),
+    index('entity_tags_entity_idx').on(t.entityType, t.entityId)
+  ]
+)
 
 // ---------------------------------------------------------------------------
 // Audit log (§18)

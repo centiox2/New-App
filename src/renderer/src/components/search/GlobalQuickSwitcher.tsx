@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { QuickSearchResult } from '@shared/ipc-types'
+import type { GlobalSearchResult } from '@shared/ipc-types'
 import { STAGE_LABELS } from '../../lib/format'
 
-const KIND_LABELS: Record<QuickSearchResult['kind'], string> = {
+const KIND_LABELS: Record<GlobalSearchResult['kind'], string> = {
   client: 'Client',
   education_entries: 'Education',
   english_test_scores: 'English test',
@@ -19,20 +19,37 @@ const KIND_LABELS: Record<QuickSearchResult['kind'], string> = {
   gsr_statements: 'GSR statement'
 }
 
+interface Action {
+  id: string
+  label: string
+  run: () => void
+}
+
 /**
- * Obsidian-inspired quick switcher: Cmd/Ctrl+K opens a fuzzy-ish search
- * (substring match, done server-side) across everything in the current
- * client's case — information entries, documents, evidence, verification,
- * and GSR sections/statements — and jumps straight to the right stage.
+ * Dashboard-level command palette: Ctrl/Cmd+K searches every non-archived
+ * client's case at once (unlike the in-workspace QuickSwitcher, which is
+ * scoped to one client), and offers a couple of direct actions when the
+ * query is empty or matches their label.
  */
-export function QuickSwitcher({ clientId }: { clientId: string }): React.JSX.Element | null {
+export function GlobalQuickSwitcher({
+  onNewClient
+}: {
+  onNewClient: () => void
+}): React.JSX.Element | null {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<QuickSearchResult[]>([])
+  const [results, setResults] = useState<GlobalSearchResult[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [searching, setSearching] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const actions: Action[] = [{ id: 'new-client', label: '+ New client', run: onNewClient }]
+  const matchingActions = actions.filter((a) =>
+    a.label.toLowerCase().includes(query.trim().toLowerCase())
+  )
+  /** Actions come first in the combined, keyboard-navigable list. */
+  const items: (Action | GlobalSearchResult)[] = [...matchingActions, ...results]
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -59,23 +76,20 @@ export function QuickSwitcher({ clientId }: { clientId: string }): React.JSX.Ele
     }
   }, [open])
 
-  const runSearch = useCallback(
-    async (q: string) => {
-      if (q.trim().length < 2) {
-        setResults([])
-        return
-      }
-      setSearching(true)
-      try {
-        const rows = await window.api.search.quickSearch(clientId, q)
-        setResults(rows)
-        setActiveIndex(0)
-      } finally {
-        setSearching(false)
-      }
-    },
-    [clientId]
-  )
+  const runSearch = useCallback(async (q: string) => {
+    if (q.trim().length < 2) {
+      setResults([])
+      return
+    }
+    setSearching(true)
+    try {
+      const rows = await window.api.search.globalSearch(q)
+      setResults(rows)
+      setActiveIndex(0)
+    } finally {
+      setSearching(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -83,22 +97,30 @@ export function QuickSwitcher({ clientId }: { clientId: string }): React.JSX.Ele
     return () => clearTimeout(handle)
   }, [open, query, runSearch])
 
-  function select(result: QuickSearchResult): void {
+  function isAction(item: Action | GlobalSearchResult): item is Action {
+    return 'run' in item
+  }
+
+  function select(item: Action | GlobalSearchResult): void {
     setOpen(false)
-    navigate(`/clients/${clientId}/${result.stage}`)
+    if (isAction(item)) {
+      item.run()
+    } else {
+      navigate(`/clients/${item.clientId}/${item.stage}`)
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActiveIndex((i) => Math.min(i + 1, results.length - 1))
+      setActiveIndex((i) => Math.min(i + 1, items.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setActiveIndex((i) => Math.max(i - 1, 0))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      const result = results[activeIndex]
-      if (result) select(result)
+      const item = items[activeIndex]
+      if (item) select(item)
     }
   }
 
@@ -124,44 +146,54 @@ export function QuickSwitcher({ clientId }: { clientId: string }): React.JSX.Ele
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Search this case — information, documents, evidence, GSR…"
+          placeholder="Search all clients, or type an action…"
           className="app-no-drag w-full border-b border-[var(--md-outline-variant)] bg-transparent px-4 py-3.5 text-sm outline-none"
         />
         <div className="max-h-96 overflow-y-auto p-1.5">
-          {searching && results.length === 0 && (
+          {searching && results.length === 0 && matchingActions.length === 0 && (
             <p className="px-3 py-6 text-center text-xs text-[var(--md-on-surface-variant)]">
               Searching…
             </p>
           )}
-          {!searching && query.trim().length >= 2 && results.length === 0 && (
+          {!searching && query.trim().length >= 2 && items.length === 0 && (
             <p className="px-3 py-6 text-center text-xs text-[var(--md-on-surface-variant)]">
               No matches.
             </p>
           )}
-          {query.trim().length < 2 && results.length === 0 && (
+          {query.trim().length < 2 && results.length === 0 && matchingActions.length === 0 && (
             <p className="px-3 py-6 text-center text-xs text-[var(--md-on-surface-variant)]">
-              Type at least 2 characters to search.
+              Type at least 2 characters to search across clients.
             </p>
           )}
-          {results.map((r, i) => (
+          {items.map((item, i) => (
             <button
-              key={`${r.kind}:${r.id}`}
+              key={isAction(item) ? item.id : `${item.kind}:${item.id}`}
               onMouseEnter={() => setActiveIndex(i)}
-              onClick={() => select(r)}
+              onClick={() => select(item)}
               className="app-no-drag flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm"
               style={{
                 backgroundColor: i === activeIndex ? 'var(--md-primary-container)' : 'transparent',
                 color: i === activeIndex ? 'var(--md-on-primary-container)' : 'inherit'
               }}
             >
-              <span className="min-w-0 flex-1">
-                <span className="mr-2 text-[10px] uppercase tracking-wide opacity-60">
-                  {KIND_LABELS[r.kind]}
-                </span>
-                <span className="truncate">{r.label}</span>
-                {r.subtitle && <span className="ml-1.5 truncate opacity-60">— {r.subtitle}</span>}
-              </span>
-              <span className="flex-shrink-0 text-[10px] opacity-60">{STAGE_LABELS[r.stage]}</span>
+              {isAction(item) ? (
+                <span className="flex-1 font-medium">{item.label}</span>
+              ) : (
+                <>
+                  <span className="min-w-0 flex-1">
+                    <span className="mr-2 text-[10px] uppercase tracking-wide opacity-60">
+                      {KIND_LABELS[item.kind]}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                    {item.kind !== 'client' && (
+                      <span className="ml-1.5 truncate opacity-60">— {item.clientName}</span>
+                    )}
+                  </span>
+                  <span className="flex-shrink-0 text-[10px] opacity-60">
+                    {STAGE_LABELS[item.stage]}
+                  </span>
+                </>
+              )}
             </button>
           ))}
         </div>

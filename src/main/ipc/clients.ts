@@ -1,7 +1,13 @@
 import { ipcMain } from 'electron'
 import { and, desc, asc, eq, inArray, like, or, count, type SQL } from 'drizzle-orm'
 import { getDb } from '../db/client'
-import { clients, verificationRecords, checklistEvaluations, gsrDocuments } from '../db/schema'
+import {
+  clients,
+  clientVisits,
+  verificationRecords,
+  checklistEvaluations,
+  gsrDocuments
+} from '../db/schema'
 import { ensureClientFolders } from '../storage/paths'
 import { logAudit } from '../audit'
 import type {
@@ -9,7 +15,8 @@ import type {
   CreateClientInput,
   ListClientsQuery,
   UpdateClientInput,
-  ClientStatus
+  ClientStatus,
+  RecentClient
 } from '../../shared/ipc-types'
 
 /**
@@ -89,6 +96,9 @@ export function registerClientHandlers(): void {
     if (query.stageFilter?.length) {
       conditions.push(inArray(clients.currentStage, query.stageFilter))
     }
+    if (!query.includeArchived) {
+      conditions.push(eq(clients.archived, false))
+    }
 
     const sortField = query.sortField ?? 'updatedAt'
     const sortCol =
@@ -159,5 +169,36 @@ export function registerClientHandlers(): void {
     await db.delete(clients).where(eq(clients.id, id))
     logAudit({ clientId: id, entityType: 'clients', entityId: id, action: 'delete' })
     return { ok: true }
+  })
+
+  ipcMain.handle('clients:recordVisit', async (_e, clientId: string) => {
+    const db = getDb()
+    const now = new Date().toISOString()
+    await db
+      .insert(clientVisits)
+      .values({ clientId, lastViewedAt: now })
+      .onConflictDoUpdate({ target: clientVisits.clientId, set: { lastViewedAt: now } })
+    return { ok: true }
+  })
+
+  ipcMain.handle('clients:recentlyViewed', async (_e, limit = 8): Promise<RecentClient[]> => {
+    const db = getDb()
+    const rows = await db
+      .select({
+        clientId: clientVisits.clientId,
+        fullName: clients.fullName,
+        lastViewedAt: clientVisits.lastViewedAt,
+        archived: clients.archived
+      })
+      .from(clientVisits)
+      .innerJoin(clients, eq(clientVisits.clientId, clients.id))
+      .where(eq(clients.archived, false))
+      .orderBy(desc(clientVisits.lastViewedAt))
+      .limit(limit)
+    return rows.map(({ clientId, fullName, lastViewedAt }) => ({
+      clientId,
+      fullName,
+      lastViewedAt
+    }))
   })
 }

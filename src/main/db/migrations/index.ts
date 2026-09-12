@@ -7,10 +7,14 @@
  * this folder as the schema evolves — add each one here in order.
  */
 import m0000 from './0000_normal_black_bolt.sql?raw'
+import m0001 from './0001_nosy_may_parker.sql?raw'
 
 export interface Migration {
   version: number
   sql: string
 }
 
-export const MIGRATIONS: Migration[] = [{ version: 1, sql: m0000 }]
+export const MIGRATIONS: Migration[] = [
+  { version: 1, sql: m0000 },
+  { version: 2, sql: m0001 }
+]

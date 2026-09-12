@@ -5,11 +5,15 @@ import { STAGE_LABELS, formatDate, formatRelativeDate } from '../lib/format'
 export function ClientCard({
   client,
   onOpen,
-  onDelete
+  onDelete,
+  onTogglePin,
+  onToggleArchive
 }: {
   client: ClientWithProgress
   onOpen: () => void
   onDelete: () => void
+  onTogglePin?: () => void
+  onToggleArchive?: () => void
 }): React.JSX.Element {
   const statusMismatch = client.status !== client.suggestedStatus
 
@@ -26,17 +30,49 @@ export function ClientCard({
             {STAGE_LABELS[client.currentStage]}
           </p>
         </div>
-        <button
-          className="app-no-drag rounded-full p-1.5 text-xs text-[var(--md-on-surface-variant)] opacity-0 transition-opacity hover:bg-[var(--md-error-container)] hover:text-[var(--md-error)] group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-          aria-label={`Delete ${client.fullName}`}
-          title="Delete client"
-        >
-          ✕
-        </button>
+        <div className="flex flex-shrink-0 items-center gap-0.5">
+          {onTogglePin && (
+            <button
+              className={`app-no-drag rounded-full p-1.5 text-xs transition-opacity hover:bg-[var(--md-surface-container-high)] ${
+                client.pinned ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+              }`}
+              onClick={(e) => {
+                e.stopPropagation()
+                onTogglePin()
+              }}
+              aria-label={client.pinned ? `Unpin ${client.fullName}` : `Pin ${client.fullName}`}
+              title={client.pinned ? 'Unpin' : 'Pin'}
+            >
+              {client.pinned ? '📌' : '📍'}
+            </button>
+          )}
+          {onToggleArchive && (
+            <button
+              className="app-no-drag rounded-full p-1.5 text-xs text-[var(--md-on-surface-variant)] opacity-0 transition-opacity hover:bg-[var(--md-surface-container-high)] group-hover:opacity-60"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleArchive()
+              }}
+              aria-label={
+                client.archived ? `Unarchive ${client.fullName}` : `Archive ${client.fullName}`
+              }
+              title={client.archived ? 'Unarchive' : 'Archive'}
+            >
+              {client.archived ? '📤' : '📥'}
+            </button>
+          )}
+          <button
+            className="app-no-drag rounded-full p-1.5 text-xs text-[var(--md-on-surface-variant)] opacity-0 transition-opacity hover:bg-[var(--md-error-container)] hover:text-[var(--md-error)] group-hover:opacity-100"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
+            aria-label={`Delete ${client.fullName}`}
+            title="Delete client"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

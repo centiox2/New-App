@@ -12,6 +12,8 @@ export interface ClientRecord {
   statusNote: string | null
   currentStage: WorkflowStage
   targetIntakeDate: string | null
+  archived: boolean
+  pinned: boolean
   createdAt: string
   updatedAt: string
 }
@@ -34,6 +36,8 @@ export interface UpdateClientInput {
   statusNote?: string | null
   currentStage?: WorkflowStage
   targetIntakeDate?: string | null
+  archived?: boolean
+  pinned?: boolean
 }
 
 export type ClientSortField = 'fullName' | 'updatedAt' | 'targetIntakeDate' | 'status'
@@ -45,6 +49,15 @@ export interface ListClientsQuery {
   stageFilter?: WorkflowStage[]
   sortField?: ClientSortField
   sortDirection?: SortDirection
+  /** Default false — archived clients are hidden from the normal dashboard list. */
+  includeArchived?: boolean
+}
+
+/** One client in the "recently viewed" dashboard list. */
+export interface RecentClient {
+  clientId: string
+  fullName: string
+  lastViewedAt: string
 }
 
 // --- App lock / settings -----------------------------------------------
@@ -429,6 +442,7 @@ export interface InformationEntityOption {
 /** One result row from the quick switcher (Cmd/Ctrl+K) search, spanning every searchable table. */
 export interface QuickSearchResult {
   kind:
+    | 'client'
     | 'education_entries'
     | 'english_test_scores'
     | 'australian_study_entries'
@@ -445,6 +459,12 @@ export interface QuickSearchResult {
   label: string
   subtitle: string | null
   stage: WorkflowStage
+}
+
+/** A QuickSearchResult plus which client it belongs to — for the dashboard's cross-client search. */
+export interface GlobalSearchResult extends QuickSearchResult {
+  clientId: string
+  clientName: string
 }
 
 // --- Graph view (Obsidian-inspired) -----------------------------------------

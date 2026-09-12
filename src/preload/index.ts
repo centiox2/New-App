@@ -41,7 +41,9 @@ import type {
   DocumentInformationLink,
   BacklinkItem,
   QuickSearchResult,
-  CaseGraph
+  GlobalSearchResult,
+  CaseGraph,
+  RecentClient
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -70,7 +72,11 @@ const api = {
       ipcRenderer.invoke('clients:create', input),
     update: (input: UpdateClientInput): Promise<ClientWithProgress> =>
       ipcRenderer.invoke('clients:update', input),
-    delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('clients:delete', id)
+    delete: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('clients:delete', id),
+    recordVisit: (clientId: string): Promise<{ ok: true }> =>
+      ipcRenderer.invoke('clients:recordVisit', clientId),
+    recentlyViewed: (limit?: number): Promise<RecentClient[]> =>
+      ipcRenderer.invoke('clients:recentlyViewed', limit)
   },
   settings: {
     lockState: (): Promise<AppLockState> => ipcRenderer.invoke('settings:lockState'),
@@ -219,7 +225,9 @@ const api = {
   },
   search: {
     quickSearch: (clientId: string, query: string): Promise<QuickSearchResult[]> =>
-      ipcRenderer.invoke('search:quickSearch', { clientId, query })
+      ipcRenderer.invoke('search:quickSearch', { clientId, query }),
+    globalSearch: (query: string): Promise<GlobalSearchResult[]> =>
+      ipcRenderer.invoke('search:globalSearch', query)
   },
   graph: {
     forClient: (clientId: string): Promise<CaseGraph> =>

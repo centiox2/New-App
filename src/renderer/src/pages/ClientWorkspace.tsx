@@ -37,7 +37,8 @@ export function ClientWorkspace(): React.JSX.Element {
     // Data fetch on mount / clientId change — intentional, not a derived-state sync.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh()
-  }, [refresh])
+    if (clientId) window.api.clients.recordVisit(clientId)
+  }, [refresh, clientId])
 
   if (!clientId) return <Navigate to="/" replace />
 

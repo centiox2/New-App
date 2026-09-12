@@ -1,11 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { ClientStatus, ClientSortField, ClientWithProgress } from '@shared/ipc-types'
+import type {
+  ClientStatus,
+  ClientSortField,
+  ClientWithProgress,
+  RecentClient,
+  WorkflowStage
+} from '@shared/ipc-types'
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { ClientCard } from '../components/ClientCard'
 import { AddClientDialog } from '../components/AddClientDialog'
 import { DeleteClientDialog } from '../components/DeleteClientDialog'
+import { IntakeCalendarModal } from '../components/IntakeCalendarModal'
+import { GlobalQuickSwitcher } from '../components/search/GlobalQuickSwitcher'
+import { STAGE_LABELS, formatRelativeDate } from '../lib/format'
 
 const STATUS_FILTERS: { value: ClientStatus; label: string }[] = [
   { value: 'red', label: 'Action Required' },
@@ -20,30 +29,50 @@ const SORT_OPTIONS: { value: ClientSortField; label: string }[] = [
   { value: 'status', label: 'Status' }
 ]
 
+function StatTile({ label, value }: { label: string; value: number }): React.JSX.Element {
+  return (
+    <div className="flex flex-col gap-0.5 rounded-xl border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-4 py-3">
+      <span className="text-2xl font-semibold tabular-nums">{value}</span>
+      <span className="text-xs text-[var(--md-on-surface-variant)]">{label}</span>
+    </div>
+  )
+}
+
 export function Dashboard(): React.JSX.Element {
   const navigate = useNavigate()
   const [clients, setClients] = useState<ClientWithProgress[]>([])
+  const [allActiveClients, setAllActiveClients] = useState<ClientWithProgress[]>([])
+  const [recentClients, setRecentClients] = useState<RecentClient[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<ClientStatus[]>([])
   const [sortField, setSortField] = useState<ClientSortField>('updatedAt')
+  const [view, setView] = useState<'active' | 'archived'>('active')
   const [addOpen, setAddOpen] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ClientWithProgress | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
     try {
-      const rows = await window.api.clients.list({
-        search: search || undefined,
-        statusFilter: statusFilter.length ? statusFilter : undefined,
-        sortField,
-        sortDirection: sortField === 'fullName' ? 'asc' : 'desc'
-      })
-      setClients(rows)
+      const [rows, unfiltered, recent] = await Promise.all([
+        window.api.clients.list({
+          search: search || undefined,
+          statusFilter: statusFilter.length ? statusFilter : undefined,
+          sortField,
+          sortDirection: sortField === 'fullName' ? 'asc' : 'desc',
+          includeArchived: view === 'archived'
+        }),
+        window.api.clients.list({ includeArchived: false }),
+        window.api.clients.recentlyViewed(8)
+      ])
+      setClients(view === 'archived' ? rows.filter((c) => c.archived) : rows)
+      setAllActiveClients(unfiltered)
+      setRecentClients(recent)
     } finally {
       setLoading(false)
     }
-  }, [search, statusFilter, sortField])
+  }, [search, statusFilter, sortField, view])
 
   useEffect(() => {
     const timeout = setTimeout(refresh, search ? 200 : 0)
@@ -51,9 +80,24 @@ export function Dashboard(): React.JSX.Element {
   }, [refresh, search])
 
   const needsAttentionCount = useMemo(
-    () => clients.filter((c) => c.status === 'red').length,
-    [clients]
+    () => allActiveClients.filter((c) => c.status === 'red').length,
+    [allActiveClients]
   )
+
+  const pinnedClients = useMemo(() => allActiveClients.filter((c) => c.pinned), [allActiveClients])
+
+  const stageCounts = useMemo(() => {
+    const counts: Partial<Record<WorkflowStage, number>> = {}
+    for (const c of allActiveClients) counts[c.currentStage] = (counts[c.currentStage] ?? 0) + 1
+    return counts
+  }, [allActiveClients])
+
+  const totalPendingActions = useMemo(
+    () => allActiveClients.reduce((sum, c) => sum + c.pendingActionCount, 0),
+    [allActiveClients]
+  )
+
+  const isFiltering = Boolean(search || statusFilter.length) || view === 'archived'
 
   function toggleStatusFilter(status: ClientStatus): void {
     setStatusFilter((prev) =>
@@ -75,6 +119,16 @@ export function Dashboard(): React.JSX.Element {
     await refresh()
   }
 
+  async function togglePin(client: ClientWithProgress): Promise<void> {
+    await window.api.clients.update({ id: client.id, pinned: !client.pinned })
+    await refresh()
+  }
+
+  async function toggleArchive(client: ClientWithProgress): Promise<void> {
+    await window.api.clients.update({ id: client.id, archived: !client.archived })
+    await refresh()
+  }
+
   return (
     <div
       className="app-drag-region flex h-screen flex-col"
@@ -85,15 +139,51 @@ export function Dashboard(): React.JSX.Element {
           <div>
             <h1 className="text-xl font-semibold">Clients</h1>
             <p className="text-sm text-[var(--md-on-surface-variant)]">
-              {clients.length} total{' '}
+              {allActiveClients.length} total{' '}
               {needsAttentionCount > 0 && (
                 <span className="text-[var(--status-red)]">
                   · {needsAttentionCount} need{needsAttentionCount === 1 ? 's' : ''} attention
                 </span>
               )}
+              {' · Ctrl/Cmd+K to search everyone'}
             </p>
           </div>
-          <Button onClick={() => setAddOpen(true)}>+ Add client</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="tonal" onClick={() => setCalendarOpen(true)}>
+              📅 Calendar
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>+ Add client</Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile label="Active cases" value={allActiveClients.length} />
+          <StatTile label="Pending actions" value={totalPendingActions} />
+          <StatTile label={`In ${STAGE_LABELS.writing}`} value={stageCounts.writing ?? 0} />
+          <StatTile label={STAGE_LABELS.finalization} value={stageCounts.finalization ?? 0} />
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setView('active')}
+            className={`app-no-drag rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+              view === 'active'
+                ? 'bg-[var(--md-primary-container)] text-[var(--md-on-primary-container)]'
+                : 'text-[var(--md-on-surface-variant)] hover:bg-[var(--md-surface-container-high)]'
+            }`}
+          >
+            Active
+          </button>
+          <button
+            onClick={() => setView('archived')}
+            className={`app-no-drag rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
+              view === 'archived'
+                ? 'bg-[var(--md-primary-container)] text-[var(--md-on-primary-container)]'
+                : 'text-[var(--md-on-surface-variant)] hover:bg-[var(--md-surface-container-high)]'
+            }`}
+          >
+            Archived
+          </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -135,19 +225,65 @@ export function Dashboard(): React.JSX.Element {
       </header>
 
       <main className="flex-1 overflow-y-auto px-8 py-6">
+        {!isFiltering && pinnedClients.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">
+              📌 Pinned
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {pinnedClients.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => navigate(`/clients/${c.id}`)}
+                  className="app-no-drag rounded-full border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-3.5 py-1.5 text-xs font-medium hover:border-[var(--md-primary)]"
+                >
+                  {c.fullName}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {!isFiltering && recentClients.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">
+              Recently viewed
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {recentClients.map((c) => (
+                <button
+                  key={c.clientId}
+                  onClick={() => navigate(`/clients/${c.clientId}`)}
+                  className="app-no-drag rounded-full border border-[var(--md-outline-variant)] bg-[var(--md-surface-container)] px-3.5 py-1.5 text-xs hover:border-[var(--md-primary)]"
+                  title={formatRelativeDate(c.lastViewedAt)}
+                >
+                  {c.fullName}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {loading ? (
           <p className="text-sm text-[var(--md-on-surface-variant)]">Loading…</p>
         ) : clients.length === 0 ? (
           <EmptyState
             title={
-              search || statusFilter.length ? 'No clients match your filters' : 'No clients yet'
+              view === 'archived'
+                ? 'No archived clients'
+                : search || statusFilter.length
+                  ? 'No clients match your filters'
+                  : 'No clients yet'
             }
             description={
-              search || statusFilter.length
-                ? 'Try a different search term or clear the status filters.'
-                : 'Add your first client to start their GSR case.'
+              view === 'archived'
+                ? 'Archived cases will show up here.'
+                : search || statusFilter.length
+                  ? 'Try a different search term or clear the status filters.'
+                  : 'Add your first client to start their GSR case.'
             }
             action={
+              view === 'active' &&
               !search &&
               !statusFilter.length && <Button onClick={() => setAddOpen(true)}>+ Add client</Button>
             }
@@ -160,6 +296,8 @@ export function Dashboard(): React.JSX.Element {
                 client={client}
                 onOpen={() => navigate(`/clients/${client.id}`)}
                 onDelete={() => setPendingDelete(client)}
+                onTogglePin={() => togglePin(client)}
+                onToggleArchive={() => toggleArchive(client)}
               />
             ))}
           </div>
@@ -172,6 +310,10 @@ export function Dashboard(): React.JSX.Element {
         onClose={() => setPendingDelete(null)}
         onConfirm={handleDelete}
       />
+      {calendarOpen && (
+        <IntakeCalendarModal clients={allActiveClients} onClose={() => setCalendarOpen(false)} />
+      )}
+      <GlobalQuickSwitcher onNewClient={() => setAddOpen(true)} />
     </div>
   )
 }
