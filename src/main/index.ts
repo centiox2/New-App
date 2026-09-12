@@ -10,6 +10,7 @@ import { registerDocumentHandlers } from './ipc/documents'
 import { registerVerificationHandlers } from './ipc/verification'
 import { registerEvidenceHandlers } from './ipc/evidence'
 import { registerGsrHandlers } from './ipc/gsr'
+import { registerReviewHandlers } from './ipc/review'
 
 function createWindow(): void {
   // Create the browser window.
@@ -74,6 +75,7 @@ app.whenReady().then(() => {
   registerVerificationHandlers()
   registerEvidenceHandlers()
   registerGsrHandlers()
+  registerReviewHandlers()
 
   createWindow()
 

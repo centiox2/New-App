@@ -30,7 +30,9 @@ import type {
   UpdateEvidenceInput,
   GsrDocument,
   GsrSection,
-  GsrStatementWithEvidence
+  GsrStatementWithEvidence,
+  ReviewSummary,
+  ChecklistDocument
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -158,6 +160,17 @@ const api = {
       ipcRenderer.invoke('gsr:linkEvidence', { statementId, evidenceItemId }),
     unlinkEvidence: (linkId: string): Promise<{ ok: true }> =>
       ipcRenderer.invoke('gsr:unlinkEvidence', linkId)
+  },
+  review: {
+    getSummary: (clientId: string): Promise<ReviewSummary> =>
+      ipcRenderer.invoke('review:getSummary', clientId)
+  },
+  checklist: {
+    get: (clientId: string): Promise<ChecklistDocument | null> =>
+      ipcRenderer.invoke('checklist:get', clientId),
+    upload: (clientId: string): Promise<ChecklistDocument | null> =>
+      ipcRenderer.invoke('checklist:upload', clientId),
+    remove: (id: string): Promise<{ ok: true }> => ipcRenderer.invoke('checklist:remove', id)
   }
 }
 

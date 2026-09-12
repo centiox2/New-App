@@ -350,3 +350,38 @@ export interface GsrStatement {
 export interface GsrStatementWithEvidence extends GsrStatement {
   evidence: { linkId: string; evidence: EvidenceItem }[]
 }
+
+// --- Review / checklist (§12) ----------------------------------------------
+
+export interface ChecklistDocument {
+  id: string
+  clientId: string
+  sourceDocumentId: string
+  createdAt: string
+  updatedAt: string
+  document: DocumentRecord
+}
+
+export interface UnsupportedStatement {
+  id: string
+  text: string
+  sectionTitle: string
+}
+
+export interface ReviewSummary {
+  documentsCount: number
+  verification: {
+    flaggedCount: number
+    notStartedCount: number
+    pendingCount: number
+    verifiedCount: number
+    couldNotVerifyCount: number
+  }
+  evidenceCount: number
+  gsr: {
+    sectionCount: number
+    emptySectionTitles: string[]
+    statementCount: number
+    unsupportedStatements: UnsupportedStatement[]
+  }
+}
