@@ -426,6 +426,27 @@ export interface InformationEntityOption {
   subtitle: string | null
 }
 
+/** One result row from the quick switcher (Cmd/Ctrl+K) search, spanning every searchable table. */
+export interface QuickSearchResult {
+  kind:
+    | 'education_entries'
+    | 'english_test_scores'
+    | 'australian_study_entries'
+    | 'employment_entries'
+    | 'immigration_history_entries'
+    | 'sponsors'
+    | 'income_sources'
+    | 'documents'
+    | 'evidence_items'
+    | 'verification_records'
+    | 'gsr_sections'
+    | 'gsr_statements'
+  id: string
+  label: string
+  subtitle: string | null
+  stage: WorkflowStage
+}
+
 /** One node the given entity is referenced by, across every link/relationship in the schema. */
 export interface BacklinkItem {
   /** The underlying link/relationship row's id, where one exists (join tables) — otherwise the target's own id. */

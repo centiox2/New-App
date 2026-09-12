@@ -39,7 +39,8 @@ import type {
   InformationEntityType,
   InformationEntityOption,
   DocumentInformationLink,
-  BacklinkItem
+  BacklinkItem,
+  QuickSearchResult
 } from '../shared/ipc-types'
 
 /** Typed list/create/update/delete client for one information-section channel. */
@@ -214,6 +215,10 @@ const api = {
       ipcRenderer.invoke('links:unlinkDocumentInformation', linkId),
     backlinksForEntity: (args: { entityType: string; entityId: string }): Promise<BacklinkItem[]> =>
       ipcRenderer.invoke('links:backlinksForEntity', args)
+  },
+  search: {
+    quickSearch: (clientId: string, query: string): Promise<QuickSearchResult[]> =>
+      ipcRenderer.invoke('search:quickSearch', { clientId, query })
   }
 }
 
