@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Button } from '../components/ui/Button'
 import { TextField } from '../components/ui/TextField'
+import { APP_LOCK_EVENT } from '../lib/appEvents'
 
 type Phase = 'loading' | 'setup' | 'locked' | 'unlocked'
 
@@ -20,6 +21,18 @@ export function AppLockGate({ children }: { children: ReactNode }): React.JSX.El
     window.api.settings.lockState().then((state) => {
       setPhase(state.isConfigured ? 'locked' : 'setup')
     })
+  }, [])
+
+  // Ctrl/Cmd+L (or the palette's "Lock app" action) re-locks immediately
+  // without losing anything — client data stays where it is, we just gate it.
+  useEffect(() => {
+    const onLockRequest = (): void => {
+      setPhase('locked')
+      setPassword('')
+      setError(null)
+    }
+    window.addEventListener(APP_LOCK_EVENT, onLockRequest)
+    return () => window.removeEventListener(APP_LOCK_EVENT, onLockRequest)
   }, [])
 
   async function handleSetup(e: FormEvent): Promise<void> {

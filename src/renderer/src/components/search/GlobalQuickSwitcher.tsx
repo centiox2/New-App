@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { GlobalSearchResult } from '@shared/ipc-types'
 import { STAGE_LABELS } from '../../lib/format'
+import { requestAppLock, requestShortcutHelp } from '../../lib/appEvents'
 
 const KIND_LABELS: Record<GlobalSearchResult['kind'], string> = {
   client: 'Client',
@@ -44,7 +45,11 @@ export function GlobalQuickSwitcher({
   const [searching, setSearching] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const actions: Action[] = [{ id: 'new-client', label: '+ New client', run: onNewClient }]
+  const actions: Action[] = [
+    { id: 'new-client', label: '+ New client', run: onNewClient },
+    { id: 'shortcuts', label: '⌨ Keyboard shortcuts', run: () => requestShortcutHelp() },
+    { id: 'lock-app', label: '🔒 Lock app', run: () => requestAppLock() }
+  ]
   const matchingActions = actions.filter((a) =>
     a.label.toLowerCase().includes(query.trim().toLowerCase())
   )

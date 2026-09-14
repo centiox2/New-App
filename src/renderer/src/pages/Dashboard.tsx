@@ -14,7 +14,17 @@ import { AddClientDialog } from '../components/AddClientDialog'
 import { DeleteClientDialog } from '../components/DeleteClientDialog'
 import { IntakeCalendarModal } from '../components/IntakeCalendarModal'
 import { GlobalQuickSwitcher } from '../components/search/GlobalQuickSwitcher'
+import { ClientTabs } from '../components/layout/ClientTabs'
 import { STAGE_LABELS, formatRelativeDate } from '../lib/format'
+import {
+  clearLastSession,
+  loadLastSession,
+  loadTabs,
+  removeTab,
+  saveTabs,
+  type ClientTab,
+  type LastSession
+} from '../lib/session'
 
 const STATUS_FILTERS: { value: ClientStatus; label: string }[] = [
   { value: 'red', label: 'Action Required' },
@@ -51,6 +61,8 @@ export function Dashboard(): React.JSX.Element {
   const [addOpen, setAddOpen] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<ClientWithProgress | null>(null)
+  const [tabs, setTabs] = useState<ClientTab[]>(() => loadTabs())
+  const [lastSession, setLastSession] = useState<LastSession | null>(() => loadLastSession())
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -99,6 +111,34 @@ export function Dashboard(): React.JSX.Element {
 
   const isFiltering = Boolean(search || statusFilter.length) || view === 'archived'
 
+  // "Continue where you left off" — resolved against live client lists so a
+  // deleted/archived-away client never shows a dead shortcut.
+  const resumeClient = useMemo(() => {
+    if (!lastSession) return null
+    const client = allActiveClients.find((c) => c.id === lastSession.clientId)
+    const recent = client ?? recentClients.find((r) => r.clientId === lastSession.clientId)
+    if (!recent) return null
+    return {
+      clientId: lastSession.clientId,
+      fullName: recent.fullName,
+      stage: lastSession.stage
+    }
+  }, [lastSession, allActiveClients, recentClients])
+
+  // Ctrl/Cmd+N — new client, unless the focus is inside a form field.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+        const target = e.target as HTMLElement | null
+        if (target && target.closest('input, textarea, select')) return
+        e.preventDefault()
+        setAddOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   function toggleStatusFilter(status: ClientStatus): void {
     setStatusFilter((prev) =>
       prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
@@ -117,6 +157,17 @@ export function Dashboard(): React.JSX.Element {
     if (!pendingDelete) return
     await window.api.clients.delete(pendingDelete.id)
     await refresh()
+  }
+
+  function handleCloseTab(clientId: string): void {
+    const next = removeTab(loadTabs(), clientId)
+    saveTabs(next)
+    setTabs(next)
+  }
+
+  function handleClearResume(): void {
+    clearLastSession()
+    setLastSession(null)
   }
 
   async function togglePin(client: ClientWithProgress): Promise<void> {
@@ -223,6 +274,37 @@ export function Dashboard(): React.JSX.Element {
           </select>
         </div>
       </header>
+
+      <ClientTabs
+        tabs={tabs}
+        activeClientId={null}
+        onSelect={(clientId) => navigate(`/clients/${clientId}`)}
+        onClose={handleCloseTab}
+      />
+
+      {!isFiltering && resumeClient && (
+        <section className="app-no-drag mx-8 mt-4 flex items-center justify-between gap-4 rounded-xl border border-[var(--md-outline-variant)] p-4">
+          <div className="min-w-0" style={{ backgroundColor: 'transparent' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--md-on-surface-variant)]">
+              Continue where you left off
+            </p>
+            <p className="mt-0.5 truncate text-sm font-medium">
+              {resumeClient.fullName} · {STAGE_LABELS[resumeClient.stage as WorkflowStage]}
+            </p>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <Button
+              variant="tonal"
+              onClick={() => navigate(`/clients/${resumeClient.clientId}/${resumeClient.stage}`)}
+            >
+              Resume →
+            </Button>
+            <Button variant="text" onClick={handleClearResume}>
+              Dismiss
+            </Button>
+          </div>
+        </section>
+      )}
 
       <main className="flex-1 overflow-y-auto px-8 py-6">
         {!isFiltering && pinnedClients.length > 0 && (
