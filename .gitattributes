@@ -1,0 +1,15 @@
+# Enforce LF line endings on every platform — prettier/eslint rules fail on
+# CRLF checkouts (as seen with default core.autocrlf=true on Windows, where
+# `npm run lint` reports "Delete ␍" for every file).
+* text=auto eol=lf
+
+# Binary assets — never touch these.
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
